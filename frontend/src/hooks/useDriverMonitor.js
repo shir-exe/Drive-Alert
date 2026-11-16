@@ -14,7 +14,7 @@ export const useDriverMonitor = (threshold = 0.4) => {
   const streamRef = useRef(null);
   const aliveRef = useRef(true);
   const cameraRequestRef = useRef(0);
-  const { faceDetected, attentionScore, isDrowsy, detectionStatus, detectionError } =
+  const { faceDetected, attentionScore, eyesClosed, isDrowsy, detectionStatus, detectionError } =
     useFaceDetection(videoRef, isCameraActive, threshold);
 
   useEffect(() => {
@@ -134,10 +134,11 @@ export const useDriverMonitor = (threshold = 0.4) => {
     cameraStarting,
     cameraError,
     attentionScore,
-    scoreDescription: 'ציון הריכוז מחושב על ידי מודל v4_2 ONNX על רצף נקודות פנים.',
+    scoreDescription: 'הערכת ערנות לפי עצימת עיניים (PERCLOS); אינה מדידת ריכוז ישירה.',
     faceDetected,
+    eyesClosed,
     isDrowsy: isDrowsy || faceDetected === false,
-    gazeState: faceDetected === false ? 'away' : isDrowsy ? 'distracted' : faceDetected === true ? 'focused' : 'unknown',
+    gazeState: faceDetected === false ? 'away' : eyesClosed ? 'eyes_closed' : faceDetected === true ? 'focused' : 'unknown',
     isMuted,
     detectionStatus,
     detectionError,
