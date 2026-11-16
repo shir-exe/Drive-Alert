@@ -71,7 +71,7 @@ export const Dashboard = () => {
             שלום, <span style={{ color: '#f87171' }}>{user?.full_name || user?.username}</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginBottom: '1.5rem' }}>
-            בחר/י מסלול נהיגה והפעל/י סשן מנוטר. מערכת ה-AI עוקבת אחר עצימת עיניים, תנועות ראש והסחות דעת באמצעות מצלמת הדפדפן ומודל ONNX.
+            בחר/י מסלול נהיגה והפעל/י סשן מנוטר. המצלמה ומודל MediaPipe מעריכים עצימת עיניים כדי לחשב מדד ערנות מקורב; המדד אינו מודד ריכוז ישירות ואינו תחליף למערכת בטיחות מוסמכת.
           </p>
 
           {/* Quick Telemetry KPI Badges */}
@@ -100,9 +100,9 @@ export const Dashboard = () => {
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ציון ערנות ממוצע</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)' }}>
-                  {stats.overall_avg_score > 0
+                  {Number.isFinite(stats.overall_avg_score)
                     ? `${stats.overall_avg_score <= 1.0 ? stats.overall_avg_score : (stats.overall_avg_score / 100).toFixed(2)} (${stats.overall_avg_score > 1.0 ? stats.overall_avg_score : Math.round(stats.overall_avg_score * 100)}%)`
-                    : 'טרם נמדד'}
+                    : 'לא זמין'}
                 </div>
               </div>
             </div>
@@ -149,7 +149,7 @@ export const Dashboard = () => {
                   transition: 'var(--transition-smooth)',
                 }}
               >
-                {prof.name.split(' ')[0]} (סף 0.40)
+                {prof.name.split(' ')[0]} (סף {prof.threshold}%)
               </button>
             ))}
           </div>

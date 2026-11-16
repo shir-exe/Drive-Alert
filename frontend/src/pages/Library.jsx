@@ -74,7 +74,9 @@ export const Library = () => {
               <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ציון ריכוז ממוצע</div>
                 <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--success)' }}>
-                  {stats.overall_avg_score > 0 ? `${stats.overall_avg_score}%` : 'טרם נמדד'}
+                  {Number.isFinite(stats.overall_avg_score)
+                    ? `${Math.round(stats.overall_avg_score > 1.0 ? stats.overall_avg_score : stats.overall_avg_score * 100)}%`
+                    : 'לא זמין'}
                 </div>
               </div>
             </div>

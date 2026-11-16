@@ -6,10 +6,10 @@ from pydantic import BaseModel, Field
 class DriveReading(BaseModel):
     position: float = Field(default=0.0, description="Playback position along driving route in seconds")
     timestamp_sec: Optional[float] = Field(default=None, description="Seconds elapsed in session")
-    score: float = Field(..., ge=0.0, le=100.0, description="Driver alertness score between 0.0 and 1.0 (or 0-100)")
+    score: Optional[float] = Field(default=None, ge=0.0, le=100.0, description="Driver alertness score between 0.0 and 1.0 (or 0-100)")
     attention_score: Optional[float] = Field(default=None, description="Alias for score")
-    face_detected: bool = Field(default=True, description="Whether driver face was detected by camera")
-    gaze_state: str = Field(default="focused", description="focused, drowsy, distracted, away")
+    face_detected: Optional[bool] = Field(default=True, description="Whether driver face was detected by camera")
+    gaze_state: str = Field(default="unknown", description="focused, drowsy, distracted, away, unknown")
     is_drowsy: Optional[bool] = Field(default=None, description="True if score < 0.4 or drowsy")
     metadata: Optional[Dict[str, Any]] = None
 
@@ -18,10 +18,10 @@ class DriveReading(BaseModel):
             self.timestamp_sec = self.position
         if self.attention_score is None:
             self.attention_score = self.score
-        if self.is_drowsy is None:
+        if self.is_drowsy is None and self.score is not None:
             # Score can be 0.0-1.0 or 0-100
             val = self.score if self.score <= 1.0 else self.score / 100.0
-            self.is_drowsy = (val < 0.4) or (not self.face_detected)
+            self.is_drowsy = (val < 0.4) or (self.face_detected is False)
 
 
 # Alias for backward compatibility
@@ -59,7 +59,7 @@ class DriveSessionResponse(BaseModel):
     start_time: datetime
     end_time: Optional[datetime] = None
     duration_watched_sec: float = 0.0
-    average_score: float = 0.0
+    average_score: Optional[float] = None
     is_completed: bool = False
     readings_count: int = 0
     readings: Optional[List[DriveReading]] = None

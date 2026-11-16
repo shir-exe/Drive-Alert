@@ -48,6 +48,9 @@ export const History = () => {
   };
 
   const formatScoreBadge = (score) => {
+    if (!Number.isFinite(score)) {
+      return <span className="badge badge-warning">לא נמדד</span>;
+    }
     const normalized = score > 1.0 ? score / 100.0 : score;
     const percentage = Math.round(normalized * 100);
 
@@ -123,9 +126,9 @@ export const History = () => {
               <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ציון ערנות ממוצע</span>
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 900 }}>
-              {stats.overall_avg_score > 0
+              {Number.isFinite(stats.overall_avg_score)
                 ? `${stats.overall_avg_score <= 1.0 ? stats.overall_avg_score : (stats.overall_avg_score / 100).toFixed(2)}`
-                : '0.00'}
+                : 'לא זמין'}
             </div>
           </div>
 
@@ -266,7 +269,11 @@ export const History = () => {
                   דוח טלמטריה וערנות: {selectedSessionDetail.content_title}
                 </h2>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  ציון ממוצע לנסיעה: {selectedSessionDetail.average_score <= 1.0 ? selectedSessionDetail.average_score : (selectedSessionDetail.average_score / 100).toFixed(2)}
+                  ציון ממוצע לנסיעה: {Number.isFinite(selectedSessionDetail.average_score)
+                    ? selectedSessionDetail.average_score <= 1.0
+                      ? selectedSessionDetail.average_score
+                      : (selectedSessionDetail.average_score / 100).toFixed(2)
+                    : 'לא נמדד'}
                 </span>
               </div>
               <button
@@ -288,7 +295,7 @@ export const History = () => {
                   justifyContent: 'space-between',
                 }}
               >
-                <span>התפלגות מדד ערנות לפי שניות הנסיעה (אדום = עייפות / חוסר פנים מתחת ל-0.4):</span>
+                <span>התפלגות מדד ערנות לפי שניות הנסיעה (אפור = לא נמדד):</span>
                 <span style={{ color: 'var(--danger)', fontWeight: 700 }}>סף: 0.40</span>
               </div>
               <div
@@ -305,19 +312,20 @@ export const History = () => {
                 }}
               >
                 {(selectedSessionDetail.readings || selectedSessionDetail.samples)?.map((r, idx) => {
-                  const val = r.score > 1.0 ? r.score / 100.0 : r.score;
-                  const isDanger = val < 0.4 || !r.face_detected;
-                  const barColor = isDanger ? '#ef4444' : val >= 0.7 ? '#10b981' : '#f59e0b';
+                  const hasScore = Number.isFinite(r.score);
+                  const val = hasScore ? (r.score > 1.0 ? r.score / 100.0 : r.score) : 0;
+                  const isDanger = r.face_detected === false || r.is_drowsy === true || (hasScore && val < 0.4);
+                  const barColor = !hasScore ? '#64748b' : isDanger ? '#ef4444' : val >= 0.7 ? '#10b981' : '#f59e0b';
 
                   return (
                     <div
                       key={idx}
-                      title={`מיקום: ${r.position || r.timestamp_sec} שניות | ציון: ${val.toFixed(2)} | פנים: ${
-                        r.face_detected ? 'כן' : 'לא'
+                      title={`מיקום: ${r.position || r.timestamp_sec} שניות | ציון: ${hasScore ? val.toFixed(2) : 'לא נמדד'} | פנים: ${
+                        r.face_detected === null ? 'לא ידוע' : r.face_detected ? 'כן' : 'לא'
                       } | מבט: ${r.gaze_state}`}
                       style={{
                         flex: '0 0 10px',
-                        height: `${Math.round(val * 100)}%`,
+                        height: `${hasScore ? Math.max(2, Math.round(val * 100)) : 2}%`,
                         background: barColor,
                         borderRadius: '2px',
                         transition: 'height 0.2s',

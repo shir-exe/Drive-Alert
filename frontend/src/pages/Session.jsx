@@ -5,13 +5,10 @@ import { useCamera } from '../hooks/useCamera';
 import { useAttentionModel } from '../hooks/useAttentionModel';
 import {
   Camera,
-  CameraOff,
   AlertTriangle,
   CheckCircle,
-  Clock,
   Eye,
   Activity,
-  Award,
   ChevronLeft
 } from 'lucide-react';
 
@@ -29,9 +26,26 @@ export const Session = () => {
 
   const learningVideoRef = useRef(null);
 
-  // Custom Hooks for camera and attention model
-  const { videoRef: webcamRef, isReady: isCameraReady, error: cameraError, startCamera, stopCamera } = useCamera();
-  const { attentionScore, gazeState, faceDetected, isDistracted, profile } = useAttentionModel(webcamRef, isCameraReady, profileId);
+  // Camera-based eye-closure alertness estimate.
+  const {
+    videoRef: webcamRef,
+    isReady: isCameraReady,
+    isStarting: cameraStarting,
+    error: cameraError,
+    startCamera,
+    stopCamera,
+  } = useCamera();
+  const {
+    attentionScore,
+    gazeState,
+    faceDetected,
+    isDistracted,
+    eyesClosed,
+    profile,
+    detectionStatus,
+    detectionError,
+    scoreDescription,
+  } = useAttentionModel(webcamRef, isCameraReady, profileId);
 
   // Initialize Session & Fetch Content
   useEffect(() => {
@@ -48,8 +62,6 @@ export const Session = () => {
         });
         setActiveSession(newSession);
 
-        // Automatically activate camera
-        await startCamera();
       } catch (err) {
         console.error('Session initialization error:', err);
       } finally {
@@ -64,6 +76,10 @@ export const Session = () => {
     };
   }, [contentId, profileId]);
 
+  useEffect(() => {
+    if (!loading && content && !cameraError && !isCameraReady) startCamera();
+  }, [loading, content, cameraError, isCameraReady, startCamera]);
+
   // Periodic metric sampler while video is playing
   useEffect(() => {
     if (!activeSession) return;
@@ -76,6 +92,7 @@ export const Session = () => {
         const newSample = {
           timestamp_sec: currentSec,
           attention_score: attentionScore,
+          score: attentionScore,
           face_detected: faceDetected,
           gaze_state: gazeState
         };
@@ -92,9 +109,10 @@ export const Session = () => {
     if (!activeSession) return;
 
     try {
-      const avg = sessionSamples.length > 0
-        ? Math.round(sessionSamples.reduce((acc, s) => acc + s.attention_score, 0) / sessionSamples.length)
-        : attentionScore;
+      const scoredSamples = sessionSamples.filter((sample) => Number.isFinite(sample.attention_score));
+      const avg = scoredSamples.length > 0
+        ? Number((scoredSamples.reduce((acc, sample) => acc + sample.attention_score, 0) / scoredSamples.length).toFixed(2))
+        : null;
 
       await sessionService.updateSession(activeSession.id, {
         samples: sessionSamples,
@@ -107,11 +125,13 @@ export const Session = () => {
       navigate('/history');
     } catch (err) {
       console.error('Failed to save session:', err);
+      stopCamera();
       navigate('/history');
     }
   };
 
   const getScoreColor = (score) => {
+    if (!Number.isFinite(score)) return '#94a3b8';
     if (score >= 75) return '#10b981'; // Green
     if (score >= profile.threshold) return '#f59e0b'; // Amber
     return '#ef4444'; // Red
@@ -215,7 +235,13 @@ export const Session = () => {
                 zIndex: 20
               }}>
                 <AlertTriangle size={20} />
-                <span>שים/י לב: זוהתה הסחת דעת / מבט מחוץ למסך!</span>
+                <span>
+                  {faceDetected === false
+                    ? 'לא זוהו פנים; המדידה אינה זמינה.'
+                    : eyesClosed
+                    ? 'זוהתה עצימת עיניים ממושכת; עצור/י במקום בטוח אם יש עייפות.'
+                    : 'זוהתה ירידה במדד הערנות; עצור/י במקום בטוח אם יש עייפות.'}
+                </span>
               </div>
             )}
           </div>
@@ -245,7 +271,7 @@ export const Session = () => {
                 מצלמת מעקב קשב
               </span>
               <span className={isCameraReady ? 'badge badge-success' : 'badge badge-warning'}>
-                {isCameraReady ? 'פעיל ומנתח' : 'ממתין להרשאה'}
+                {isCameraReady ? 'מצלמה פעילה' : cameraStarting ? 'מתחבר למצלמה...' : cameraError ? 'המצלמה לא זמינה' : 'ממתין להרשאה'}
               </span>
             </div>
 
@@ -256,7 +282,7 @@ export const Session = () => {
               background: '#0f172a',
               borderRadius: 'var(--radius-sm)',
               overflow: 'hidden',
-              border: `2px solid ${getScoreColor(attentionScore)}`
+              border: `2px solid ${faceDetected === false ? '#ef4444' : getScoreColor(attentionScore)}`
             }}>
               <video
                 ref={webcamRef}
@@ -271,18 +297,6 @@ export const Session = () => {
                 }}
               />
 
-              {/* Bounding Box / Face Tracking Simulation Grid */}
-              {isCameraReady && (
-                <div style={{
-                  position: 'absolute',
-                  inset: '15%',
-                  border: `1px dashed ${getScoreColor(attentionScore)}`,
-                  borderRadius: '12px',
-                  pointerEvents: 'none',
-                  opacity: 0.7
-                }} />
-              )}
-
               {/* Status pill in webcam feed */}
               <div style={{
                 position: 'absolute',
@@ -296,14 +310,47 @@ export const Session = () => {
                 alignItems: 'center',
                 gap: '0.4rem'
               }}>
-                <Eye size={13} color={getScoreColor(attentionScore)} />
-                <span>מצב מבט: {gazeState === 'focused' ? 'ממוקד במסך' : 'מוסח / צידי'}</span>
+                <Eye size={13} color={faceDetected === false ? '#ef4444' : '#94a3b8'} />
+                <span>
+                  {faceDetected === false
+                    ? 'פנים לא זוהו'
+                    : eyesClosed
+                    ? 'זוהתה עצימת עיניים'
+                    : faceDetected === true
+                    ? 'פנים זוהו; כיוון מבט אינו נמדד'
+                    : 'ממתין לזיהוי פנים'}
+                </span>
               </div>
             </div>
 
+            {!isCameraReady && (
+              <button
+                onClick={startCamera}
+                disabled={cameraStarting}
+                className="btn-secondary"
+                style={{ marginTop: '0.65rem', width: '100%', justifyContent: 'center' }}
+              >
+                {cameraStarting ? 'מתחבר למצלמה...' : cameraError ? 'נסה/י שוב להפעיל מצלמה' : 'הפעל מצלמה'}
+              </button>
+            )}
             {cameraError && (
               <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
                 {cameraError}
+              </p>
+            )}
+            {detectionError && (
+              <p style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
+                {detectionError}
+              </p>
+            )}
+            {scoreDescription && (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
+                {scoreDescription}
+              </p>
+            )}
+            {isCameraReady && detectionStatus === 'loading' && (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
+                טוען את מודל זיהוי הפנים...
               </p>
             )}
           </div>
@@ -320,7 +367,7 @@ export const Session = () => {
                 fontWeight: 800,
                 color: getScoreColor(attentionScore)
               }}>
-                {attentionScore}%
+                {Number.isFinite(attentionScore) ? `${attentionScore}%` : '—'}
               </span>
             </div>
 
@@ -334,7 +381,7 @@ export const Session = () => {
               marginBottom: '1rem'
             }}>
               <div style={{
-                width: `${attentionScore}%`,
+                width: `${Number.isFinite(attentionScore) ? attentionScore : 0}%`,
                 height: '100%',
                 background: `linear-gradient(90deg, ${getScoreColor(attentionScore)} 0%, #6366f1 100%)`,
                 borderRadius: 'var(--radius-full)',

@@ -22,6 +22,7 @@ export const DriveView = () => {
   const { id: routeId } = useParams();
   const [searchParams] = useSearchParams();
   const profileId = searchParams.get('profile') || 'standard';
+  const alertThreshold = 0.4;
   const navigate = useNavigate();
 
   const [route, setRoute] = useState(null);
@@ -32,21 +33,26 @@ export const DriveView = () => {
 
   const roadVideoRef = useRef(null);
 
-  // Driver monitor custom hook (Face Mesh, ONNX, Web Audio alarm, 0.0 - 1.0 score)
+  // Driver monitoring uses MediaPipe eye-blink blendshapes and a PERCLOS alertness proxy.
   const {
     videoRef: webcamRef,
     hasConsent,
     isCameraActive,
+    cameraStarting,
     cameraError,
     attentionScore,
+    scoreDescription,
     faceDetected,
     isDrowsy,
+    eyesClosed,
     gazeState,
     isMuted,
+    detectionStatus,
+    detectionError,
     requestCameraAccess,
     stopCamera,
     toggleMute,
-  } = useDriverMonitor(0.4);
+  } = useDriverMonitor();
 
   // Initialize Route & Backend Drive Session
   useEffect(() => {
@@ -88,11 +94,11 @@ export const DriveView = () => {
         const reading = {
           position: currentSec,
           timestamp_sec: currentSec,
-          score: Number(attentionScore.toFixed(2)),
-          attention_score: Number(attentionScore.toFixed(2)),
+          score: attentionScore === null ? null : Number(attentionScore.toFixed(2)),
+          attention_score: attentionScore === null ? null : Number(attentionScore.toFixed(2)),
           face_detected: faceDetected,
           gaze_state: gazeState,
-          is_drowsy: isDrowsy,
+          is_drowsy: attentionScore === null ? null : isDrowsy,
         };
 
         setDriveReadings((prev) => [...prev, reading]);
@@ -118,10 +124,10 @@ export const DriveView = () => {
     }
 
     try {
-      const avg =
-        driveReadings.length > 0
-          ? Number((driveReadings.reduce((acc, r) => acc + r.score, 0) / driveReadings.length).toFixed(2))
-          : attentionScore;
+      const scoredReadings = driveReadings.filter((reading) => Number.isFinite(reading.score));
+      const avg = scoredReadings.length > 0
+        ? Number((scoredReadings.reduce((acc, reading) => acc + reading.score, 0) / scoredReadings.length).toFixed(2))
+        : null;
 
       await sessionService.updateSession(activeSession.id, {
         readings: driveReadings,
@@ -174,7 +180,7 @@ export const DriveView = () => {
             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginTop: '0.2rem' }}>
               <span className="badge badge-primary">{route?.category || 'כביש מהיר'}</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                סף התרעת עייפות: 0.40
+                סף התרעת עייפות: {alertThreshold.toFixed(2)}
               </span>
             </div>
           </div>
@@ -207,7 +213,9 @@ export const DriveView = () => {
         <AlertBanner
           score={attentionScore}
           faceDetected={faceDetected}
-          threshold={0.4}
+          isDrowsy={isDrowsy}
+          eyesClosed={eyesClosed}
+          threshold={alertThreshold}
           isMuted={isMuted}
           onToggleMute={toggleMute}
         />
@@ -268,7 +276,11 @@ export const DriveView = () => {
                 }}
               >
                 <AlertTriangle size={20} />
-                <span>התרעה: ירידה בריכוז / הסחת דעת מהכביש!</span>
+                <span>
+                  {faceDetected === false
+                    ? 'התראה: פני הנהג אינם מזוהים!'
+                    : 'התראה: ירידה בריכוז / הסחת דעת מהכביש!'}
+                </span>
               </div>
             )}
           </div>
@@ -308,7 +320,7 @@ export const DriveView = () => {
                 מצלמת ניטור פני נהג
               </span>
               <span className={isCameraActive ? 'badge badge-success' : 'badge badge-warning'}>
-                {isCameraActive ? 'ניטור פעיל' : 'ממתין להסכמה'}
+                {isCameraActive ? 'מצלמה פעילה' : cameraStarting ? 'מתחבר למצלמה...' : cameraError ? 'המצלמה לא זמינה' : 'ממתין להסכמה'}
               </span>
             </div>
 
@@ -322,13 +334,15 @@ export const DriveView = () => {
                 borderRadius: 'var(--radius-sm)',
                 overflow: 'hidden',
                 border: `2px solid ${
-                  !faceDetected
+                faceDetected === false
                     ? '#ef4444'
-                    : attentionScore < 0.4
+                  : Number.isFinite(attentionScore) && attentionScore < alertThreshold
                     ? '#ef4444'
-                    : attentionScore < 0.7
+                  : Number.isFinite(attentionScore) && attentionScore < 0.7
                     ? '#f59e0b'
-                    : '#10b981'
+                  : faceDetected === true
+                  ? '#10b981'
+                  : '#64748b'
                 }`,
               }}
             >
@@ -372,10 +386,11 @@ export const DriveView = () => {
                       marginBottom: '1rem',
                     }}
                   >
-                    הזרמת הווידאו משמשת לניתוח מקומי בדפדפן (MediaPipe & ONNX) לזיהוי עייפות והסחת דעת, ואינה נשמרת או משודרת לשרת.
+                    הווידאו מנותח בדפדפן לזיהוי פנים ועצימת עיניים בלבד. הוא אינו נשמר או משודר לשרת; ציון הערנות הוא הערכה מקורבת ואינו מדידת ריכוז ישירה.
                   </p>
                   <button
                     onClick={requestCameraAccess}
+                    disabled={cameraStarting}
                     className="btn-primary"
                     style={{
                       fontSize: '0.85rem',
@@ -384,7 +399,7 @@ export const DriveView = () => {
                     }}
                   >
                     <Camera size={16} />
-                    <span>אני מסכים/ה – הפעל מצלמה</span>
+                    <span>{cameraStarting ? 'מתחבר למצלמה...' : cameraError ? 'נסה/י שוב להפעיל מצלמה' : 'אני מסכים/ה – הפעל מצלמה'}</span>
                   </button>
                 </div>
               ) : (
@@ -403,22 +418,8 @@ export const DriveView = () => {
                     }}
                   />
 
-                  {/* Face Mesh Landmark Overlay Box */}
-                  {isCameraActive && faceDetected && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: '16%',
-                        border: `1.5px dashed ${attentionScore < 0.4 ? '#ef4444' : '#10b981'}`,
-                        borderRadius: '16px',
-                        pointerEvents: 'none',
-                        opacity: 0.75,
-                      }}
-                    />
-                  )}
-
                   {/* Warning overlay if face is missing */}
-                  {!faceDetected && (
+                  {faceDetected === false && (
                     <div
                       style={{
                         position: 'absolute',
@@ -455,13 +456,15 @@ export const DriveView = () => {
                       gap: '0.35rem',
                     }}
                   >
-                    {faceDetected ? <Eye size={12} color="#10b981" /> : <EyeOff size={12} color="#ef4444" />}
+                    {faceDetected === false ? <EyeOff size={12} color="#ef4444" /> : <Eye size={12} color="#94a3b8" />}
                     <span>
-                      {faceDetected
-                        ? gazeState === 'focused'
-                          ? 'מבט: ממוקד בכביש'
-                          : 'מבט: מוסח / צידי'
-                        : 'פנים לא זוהו'}
+                    {faceDetected === false
+                      ? 'פנים לא זוהו'
+                      : faceDetected === true
+                      ? eyesClosed
+                        ? 'זוהתה עצימת עיניים'
+                        : 'פנים זוהו; כיוון מבט אינו נמדד'
+                      : 'ממתין לזיהוי פנים'}
                     </span>
                   </div>
                 </>
@@ -473,10 +476,23 @@ export const DriveView = () => {
                 {cameraError}
               </p>
             )}
+            {detectionError && (
+              <p style={{ color: 'var(--danger)', fontSize: '0.78rem', marginTop: '0.6rem' }}>
+                {detectionError}
+              </p>
+            )}
+            {isCameraActive && detectionStatus === 'loading' && (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.6rem' }}>
+                טוען את מודל זיהוי הפנים...
+              </p>
+            )}
           </div>
 
           {/* Alertness Gauge Meter (0.0 to 1.0, 0.4 Danger Threshold) */}
-          <GaugeMeter score={attentionScore} threshold={0.4} label="מד ערנות נהג (HUD)" />
+          <GaugeMeter score={attentionScore} threshold={alertThreshold} label="מד ערנות נהג (HUD)" />
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '-0.75rem' }}>
+            {scoreDescription}
+          </p>
 
           {/* Drive Telemetry KPI Panel */}
           <div className="glass-panel" style={{ padding: '1.25rem' }}>

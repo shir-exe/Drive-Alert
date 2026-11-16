@@ -1,27 +1,34 @@
 import React from 'react';
 import { Activity, ShieldCheck, AlertCircle, AlertTriangle } from 'lucide-react';
 
-export const GaugeMeter = ({ score = 1.0, threshold = 0.4, label = 'מד ערנות נהג (HUD)' }) => {
-  // Normalize score to 0.0 - 1.0
-  const normalized = Math.max(0.0, Math.min(1.0, score > 1.0 ? score / 100.0 : score));
+export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנות נהג (HUD)' }) => {
+  const hasScore = Number.isFinite(score);
+  const normalized = hasScore
+    ? Math.max(0.0, Math.min(1.0, score > 1.0 ? score / 100.0 : score))
+    : 0;
   const percentage = Math.round(normalized * 100);
 
   // Determine state colors and descriptors
-  let statusColor = '#10b981'; // Green
-  let statusText = 'ערני וממוקד';
-  let statusClass = 'badge-success';
-  let IconComponent = ShieldCheck;
+  let statusColor = '#94a3b8';
+  let statusText = 'לא זמין';
+  let statusClass = 'badge-warning';
+  let IconComponent = AlertCircle;
 
-  if (normalized < threshold) {
+  if (hasScore && normalized < threshold) {
     statusColor = '#ef4444'; // Red
     statusText = 'סכנה: עייפות / הסחת דעת!';
     statusClass = 'badge-danger';
     IconComponent = AlertTriangle;
-  } else if (normalized < 0.7) {
+  } else if (hasScore && normalized < 0.7) {
     statusColor = '#f59e0b'; // Amber
     statusText = 'זהירות: ירידה בריכוז';
     statusClass = 'badge-warning';
     IconComponent = AlertCircle;
+  } else if (hasScore) {
+    statusColor = '#10b981';
+    statusText = 'ערני וממוקד';
+    statusClass = 'badge-success';
+    IconComponent = ShieldCheck;
   }
 
   // SVG Gauge Calculations (Semi-circle 180 degrees)
@@ -40,8 +47,8 @@ export const GaugeMeter = ({ score = 1.0, threshold = 0.4, label = 'מד ערנ�
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        border: normalized < threshold ? '1px solid rgba(239, 68, 68, 0.6)' : undefined,
-        boxShadow: normalized < threshold ? '0 0 25px rgba(239, 68, 68, 0.35)' : undefined,
+        border: hasScore && normalized < threshold ? '1px solid rgba(239, 68, 68, 0.6)' : undefined,
+        boxShadow: hasScore && normalized < threshold ? '0 0 25px rgba(239, 68, 68, 0.35)' : undefined,
       }}
     >
       {/* Header */}
@@ -106,7 +113,7 @@ export const GaugeMeter = ({ score = 1.0, threshold = 0.4, label = 'מד ערנ�
             stroke={statusColor}
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
+            strokeDashoffset={hasScore ? strokeDashoffset : circumference}
             strokeLinecap="round"
             style={{
               transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease',
@@ -135,10 +142,10 @@ export const GaugeMeter = ({ score = 1.0, threshold = 0.4, label = 'מד ערנ�
               textShadow: `0 0 15px ${statusColor}`,
             }}
           >
-            {normalized.toFixed(2)}
+            {hasScore ? normalized.toFixed(2) : '—'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-            {percentage}% ערנות
+            {hasScore ? `${percentage}% ערנות` : 'ממתין למדידה'}
           </div>
         </div>
       </div>

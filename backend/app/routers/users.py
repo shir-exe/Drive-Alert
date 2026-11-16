@@ -89,13 +89,13 @@ async def get_user_statistics(
             "total_sessions": 0,
             "completed_sessions": 0,
             "total_watch_seconds": 0.0,
-            "overall_avg_score": 0.0
+            "overall_avg_score": None
         }
     
     data = results[0]
-    avg = data.get("overall_avg_score", 0.0)
+    avg = data.get("overall_avg_score")
     # Normalized representation if average was stored as 0-1 or 0-100
-    display_avg = round(avg, 2) if avg <= 1.0 else round(avg, 1)
+    display_avg = None if avg is None else round(avg, 2) if avg <= 1.0 else round(avg, 1)
 
     return {
         "total_sessions": data.get("total_sessions", 0),

@@ -1,19 +1,23 @@
 import React from 'react';
-import { AlertTriangle, EyeOff, BellRing, ShieldAlert, Volume2, VolumeX } from 'lucide-react';
+import { EyeOff, ShieldAlert, Volume2, VolumeX } from 'lucide-react';
 
 export const AlertBanner = ({
-  score = 1.0,
-  faceDetected = true,
+  score = null,
+  faceDetected = null,
+  isDrowsy = false,
+  eyesClosed = false,
   threshold = 0.4,
   isMuted = false,
   onToggleMute,
 }) => {
   // Score is between 0.0 and 1.0
-  const normalizedScore = score > 1.0 ? score / 100.0 : score;
-  const isCriticalAlert = normalizedScore < threshold;
-  const isFaceMissing = !faceDetected;
+  const hasScore = Number.isFinite(score);
+  const normalizedScore = hasScore ? (score > 1.0 ? score / 100.0 : score) : null;
+  const isFaceMissing = faceDetected === false;
+  const isDrowsinessAlert = isDrowsy && !isFaceMissing;
+  const isCriticalAlert = isFaceMissing || isDrowsinessAlert || (hasScore && normalizedScore < threshold);
 
-  if (!isCriticalAlert && !isFaceMissing) {
+  if (!isCriticalAlert && !isFaceMissing && !isDrowsinessAlert) {
     return null;
   }
 
@@ -64,11 +68,17 @@ export const AlertBanner = ({
           <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
             {isFaceMissing
               ? 'אזהרה קריטית: לא זוהו פני נהג!'
+              : isDrowsinessAlert
+              ? eyesClosed
+                ? 'אזהרה: זוהתה עצימת עיניים ממושכת!'
+                : 'אזהרה: מדד הערנות נמוך!'
               : 'התרעת עייפות / הסחת דעת קריטית! סכנת תאונה!'}
           </div>
           <div style={{ fontSize: '0.85rem', opacity: 0.95, marginTop: '0.1rem' }}>
             {isFaceMissing
-              ? 'המצלמה אינה מזהה את מבט הנהג. אנא שמור על קשר עין עם הכביש והפנה את הראש לפנים.'
+              ? 'המצלמה אינה מזהה פנים, ולכן לא ניתן לחשב את מדד הערנות.'
+              : isDrowsinessAlert
+              ? `${eyesClosed ? 'זוהתה עצימת עיניים ממושכת' : 'הצטברה עצימת עיניים בחלון המדידה'}. עצור במקום בטוח אם אתה עייף.`
               : `ציון הערנות ירד ל-${normalizedScore.toFixed(2)} (מתחת לסף הבטיחות של ${threshold.toFixed(2)}). מומלץ לעצור להתרעננות מיידית!`}
           </div>
         </div>
@@ -109,7 +119,7 @@ export const AlertBanner = ({
             fontSize: '0.95rem',
           }}
         >
-          {isFaceMissing ? 'NO FACE' : `ALERT: ${normalizedScore.toFixed(2)}`}
+          {isFaceMissing ? 'NO FACE' : isDrowsinessAlert ? eyesClosed ? 'EYES CLOSED' : 'LOW ALERTNESS' : `ALERT: ${normalizedScore.toFixed(2)}`}
         </div>
       </div>
     </div>
