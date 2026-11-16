@@ -33,7 +33,7 @@ export const DriveView = () => {
 
   const roadVideoRef = useRef(null);
 
-  // Driver monitoring uses MediaPipe face landmarks and the instructor-provided ONNX model.
+  // Driver monitoring uses MediaPipe eye-blink blendshapes and a PERCLOS alertness proxy.
   const {
     videoRef: webcamRef,
     hasConsent,
@@ -44,6 +44,7 @@ export const DriveView = () => {
     scoreDescription,
     faceDetected,
     isDrowsy,
+    eyesClosed,
     gazeState,
     isMuted,
     detectionStatus,
@@ -179,7 +180,7 @@ export const DriveView = () => {
             <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginTop: '0.2rem' }}>
               <span className="badge badge-primary">{route?.category || 'כביש מהיר'}</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                סף ציון ריכוז: {alertThreshold.toFixed(2)}
+                סף התרעת עייפות: {alertThreshold.toFixed(2)}
               </span>
             </div>
           </div>
@@ -207,12 +208,13 @@ export const DriveView = () => {
         </div>
       </div>
 
-      {/* Prominent low-attention or missing-face alert */}
+      {/* Prominent Fatigue/Distraction Alert Banner (< 0.4 or Face Missing) */}
       <div style={{ marginBottom: '1.25rem' }}>
         <AlertBanner
           score={attentionScore}
           faceDetected={faceDetected}
           isDrowsy={isDrowsy}
+          eyesClosed={eyesClosed}
           threshold={alertThreshold}
           isMuted={isMuted}
           onToggleMute={toggleMute}
@@ -384,7 +386,7 @@ export const DriveView = () => {
                       marginBottom: '1rem',
                     }}
                   >
-                    הווידאו מעובד בדפדפן באמצעות זיהוי פנים ומודל הריכוז ONNX. הוא אינו נשמר או משודר לשרת.
+                    הווידאו מנותח בדפדפן לזיהוי פנים ועצימת עיניים בלבד. הוא אינו נשמר או משודר לשרת; ציון הערנות הוא הערכה מקורבת ואינו מדידת ריכוז ישירה.
                   </p>
                   <button
                     onClick={requestCameraAccess}
@@ -459,9 +461,9 @@ export const DriveView = () => {
                     {faceDetected === false
                       ? 'פנים לא זוהו'
                       : faceDetected === true
-                      ? Number.isFinite(attentionScore)
-                        ? 'מודל הריכוז פעיל'
-                        : 'אוספים נתוני פנים למודל'
+                      ? eyesClosed
+                        ? 'זוהתה עצימת עיניים'
+                        : 'פנים זוהו; כיוון מבט אינו נמדד'
                       : 'ממתין לזיהוי פנים'}
                     </span>
                   </div>
@@ -481,13 +483,13 @@ export const DriveView = () => {
             )}
             {isCameraActive && detectionStatus === 'loading' && (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.6rem' }}>
-                טוען את מודלי זיהוי הפנים והריכוז...
+                טוען את מודל זיהוי הפנים...
               </p>
             )}
           </div>
 
-          {/* Model attention score (0.0 to 1.0, 0.4 danger threshold) */}
-          <GaugeMeter score={attentionScore} threshold={alertThreshold} label="מד ריכוז נהג (HUD)" />
+          {/* Alertness Gauge Meter (0.0 to 1.0, 0.4 Danger Threshold) */}
+          <GaugeMeter score={attentionScore} threshold={alertThreshold} label="מד ערנות נהג (HUD)" />
           <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '-0.75rem' }}>
             {scoreDescription}
           </p>

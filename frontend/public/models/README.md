@@ -1,7 +1,9 @@
-# Browser-based concentration model
+# Browser-based alertness estimate
 
-The application currently uses `v4_66.onnx`; `v4_2.onnx` is retained as the other instructor-provided model for comparison. Both take a temporal sequence shaped `[1, 100, 478, 3]` (100 face-landmark frames, each with 478 XYZ points) and expose `regression_scores`, `classification_logits`, and `attention_weights`. The application uses the selected model's `regression_scores` output as its continuous 0-1 HUD value; it does not infer meanings for the five classification logits because no class-label mapping was supplied. The models have not been compared against labeled webcam examples, so selecting `v4_66` is an experiment, not evidence that it is more accurate.
+`v4_2.onnx` is a 145-byte `ReduceMean` placeholder, not an attention classifier, and is intentionally not loaded.
 
-MediaPipe FaceLandmarker runs in the browser and supplies XYZ face landmarks to ONNX Runtime Web. The first score appears after collecting 100 frames; inference then runs on a rolling window. If either model cannot load or inference fails, the UI reports an error instead of fabricating a score. If no face is detected for 750 ms, the score is set to zero and the no-face alert is raised. The configured drive alert threshold is 0.40.
+Both monitoring screens use the MediaPipe FaceLandmarker task with face blendshape output enabled. The trained task estimates `eyeBlinkLeft` and `eyeBlinkRight`; the app converts those estimates into a rolling 30-second eye-closure ratio (PERCLOS-style) and an alertness proxy (`1 - PERCLOS / 0.20`, clamped to 0-1). Scores become available after a short warm-up. The drive alert threshold is 0.40. A continuous eye closure for 1.5 seconds also triggers an immediate warning. Camera frames remain in the browser.
 
-The webcam video is processed locally and is not uploaded by the monitoring hooks. MediaPipe's task bundle and face-landmarker asset load from their upstream public CDNs.
+This is an eye-closure-based fatigue indicator, not a model that directly measures concentration, gaze direction, or driving fitness. Its thresholds are heuristics and have not been clinically or operationally validated. Do not rely on it as a safety-certified driver-monitoring system.
+
+The MediaPipe task bundle and face-landmarker model are loaded from their upstream public CDNs when the feature initializes.
