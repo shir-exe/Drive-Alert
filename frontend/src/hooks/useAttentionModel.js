@@ -15,6 +15,6 @@ export const useAttentionModel = (videoRef, isCameraReady, profileId = 'standard
     detectionStatus,
     detectionError,
     isDrowsy,
-    scoreDescription: 'ציון הריכוז מחושב על ידי מודל v4_2 ONNX על רצף נקודות פנים.',
+    scoreDescription: 'ציון הריכוז מחושב על ידי מודל v4_66 ONNX על רצף נקודות פנים.',
   };
 };
