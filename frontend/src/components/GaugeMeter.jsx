@@ -92,7 +92,7 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
           <path
             d="M 20 105 A 80 80 0 0 1 180 105"
             fill="none"
-            stroke="rgba(255, 255, 255, 0.08)"
+            stroke="#ebe5f4"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -159,7 +159,7 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
           alignItems: 'center',
           marginTop: '0.8rem',
           padding: '0.4rem 0.6rem',
-          background: 'rgba(255, 255, 255, 0.03)',
+          background: '#f7f3ff',
           borderRadius: 'var(--radius-sm)',
           fontSize: '0.75rem',
         }}

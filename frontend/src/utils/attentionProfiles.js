@@ -9,7 +9,7 @@ export const ATTENTION_PROFILES = {
     threshold: 65,
     bufferTimeSeconds: 3.5,
     minFaceDetectionConfidence: 0.6,
-    color: '#6366f1',
+    color: '#6d28d9',
     badgeClass: 'badge-primary'
   },
   high: {

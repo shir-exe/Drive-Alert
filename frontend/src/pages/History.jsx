@@ -79,7 +79,7 @@ export const History = () => {
     <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.4rem' }}>
-          יומן נסיעות וציוני <span style={{ color: '#f87171' }}>ערנות</span>
+          יומן נסיעות וציוני <span style={{ color: 'var(--accent-primary)' }}>ערנות</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
           מעקב אחר פרופילי ערנות, התרעות עייפות ודוחות בטיחות נהיגה בזמן אמת
@@ -102,7 +102,7 @@ export const History = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem',
-                color: '#38bdf8',
+                color: 'var(--accent-secondary)',
                 marginBottom: '0.5rem',
               }}
             >
@@ -138,7 +138,7 @@ export const History = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem',
-                color: '#f87171',
+                color: 'var(--accent-primary)',
                 marginBottom: '0.5rem',
               }}
             >
@@ -305,7 +305,7 @@ export const History = () => {
                   gap: '4px',
                   height: '150px',
                   padding: '0.75rem',
-                  background: 'rgba(15, 23, 42, 0.85)',
+                  background: '#f7f3ff',
                   borderRadius: 'var(--radius-sm)',
                   overflowX: 'auto',
                   border: '1px solid var(--border-subtle)',
@@ -340,7 +340,7 @@ export const History = () => {
               <button
                 onClick={() => setSelectedSessionDetail(null)}
                 className="btn-primary"
-                style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}
+                style={{ background: 'var(--accent-gradient)' }}
               >
                 הבנתי, סגור
               </button>

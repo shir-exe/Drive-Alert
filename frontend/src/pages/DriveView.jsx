@@ -316,7 +316,7 @@ export const DriveView = () => {
                   gap: '0.4rem',
                 }}
               >
-                <Camera size={16} color="#38bdf8" />
+                <Camera size={16} color="var(--accent-secondary)" />
                 מצלמת ניטור פני נהג
               </span>
               <span className={isCameraActive ? 'badge badge-success' : 'badge badge-warning'}>
@@ -358,7 +358,7 @@ export const DriveView = () => {
                     justifyContent: 'center',
                     padding: '1.5rem',
                     textAlign: 'center',
-                    background: 'rgba(15, 23, 42, 0.95)',
+                    background: '#ffffff',
                   }}
                 >
                   <div
@@ -366,14 +366,14 @@ export const DriveView = () => {
                       width: '46px',
                       height: '46px',
                       borderRadius: '50%',
-                      background: 'rgba(99, 102, 241, 0.2)',
+                      background: '#f1eaff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       marginBottom: '0.75rem',
                     }}
                   >
-                    <Lock size={22} color="#818cf8" />
+                    <Lock size={22} color="var(--accent-primary)" />
                   </div>
                   <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.4rem' }}>
                     אישור הפעלת מצלמת בטיחות
@@ -395,7 +395,7 @@ export const DriveView = () => {
                     style={{
                       fontSize: '0.85rem',
                       padding: '0.55rem 1rem',
-                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      background: 'var(--accent-gradient)',
                     }}
                   >
                     <Camera size={16} />
@@ -509,7 +509,7 @@ export const DriveView = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f7f3ff',
                   padding: '0.6rem',
                   borderRadius: 'var(--radius-sm)',
                 }}
@@ -519,7 +519,7 @@ export const DriveView = () => {
               </div>
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: '#f7f3ff',
                   padding: '0.6rem',
                   borderRadius: 'var(--radius-sm)',
                 }}

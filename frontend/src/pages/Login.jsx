@@ -51,19 +51,19 @@ export const Login = () => {
             width: '58px',
             height: '58px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #ef4444 0%, #f97316 50%, #6366f1 100%)',
+            background: 'var(--accent-gradient)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem',
-            boxShadow: '0 0 25px rgba(239, 68, 68, 0.4)',
+            boxShadow: 'var(--accent-glow)',
           }}
         >
           <ShieldAlert size={34} color="#ffffff" />
         </div>
 
         <h1 style={{ fontSize: '1.85rem', fontWeight: 900, marginBottom: '0.4rem' }}>
-          Drive<span style={{ color: '#f87171' }}>Alert</span>
+          Drive<span style={{ color: 'var(--accent-primary)' }}>Alert</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
           מערכת חכמה לניטור ערנות נהגים ומניעת הסחת דעת בזמן אמת
@@ -74,7 +74,7 @@ export const Login = () => {
             style={{
               background: 'rgba(239, 68, 68, 0.15)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
+              color: '#b42318',
               padding: '0.75rem',
               borderRadius: 'var(--radius-sm)',
               fontSize: '0.85rem',
@@ -149,7 +149,7 @@ export const Login = () => {
               justifyContent: 'center',
               marginTop: '1rem',
               padding: '0.85rem',
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              background: 'var(--accent-gradient)',
             }}
           >
             <span>{loading ? 'מתחבר למערכת...' : 'כניסה למערכת'}</span>
@@ -166,7 +166,7 @@ export const Login = () => {
         >
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
             עדיין אין לך פרופיל נהג?{' '}
-            <Link to="/register" style={{ color: '#f87171', fontWeight: 600 }}>
+            <Link to="/register" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
               הרשמה מהירה כאן
             </Link>
           </p>

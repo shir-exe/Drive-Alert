@@ -50,17 +50,17 @@ export const Dashboard = () => {
           marginBottom: '2.5rem',
           position: 'relative',
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%)',
-          border: '1px solid rgba(239, 68, 68, 0.2)',
+          background: 'linear-gradient(135deg, #ffffff 0%, #f5efff 100%)',
+          border: '1px solid var(--border-subtle)',
         }}
       >
         <div style={{ maxWidth: '750px' }}>
           <div
             className="badge"
             style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#f87171',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: '#f1eaff',
+              color: 'var(--accent-primary)',
+              border: '1px solid #dfd0fa',
               marginBottom: '0.8rem',
             }}
           >
@@ -68,7 +68,7 @@ export const Dashboard = () => {
             <span>DriveAlert • מערכת בטיחות וניטור נהג בזמן אמת</span>
           </div>
           <h1 style={{ fontSize: '2.3rem', fontWeight: 900, lineHeight: 1.2, marginBottom: '0.8rem' }}>
-            שלום, <span style={{ color: '#f87171' }}>{user?.full_name || user?.username}</span>
+            שלום, <span style={{ color: 'var(--accent-primary)' }}>{user?.full_name || user?.username}</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginBottom: '1.5rem' }}>
             בחר/י מסלול נהיגה והפעל/י סשן מנוטר. המצלמה ומודל MediaPipe מעריכים עצימת עיניים כדי לחשב מדד ערנות מקורב; המדד אינו מודד ריכוז ישירות ואינו תחליף למערכת בטיחות מוסמכת.
@@ -79,20 +79,20 @@ export const Dashboard = () => {
             <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: '#ffffff',
                   padding: '0.7rem 1.25rem',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-subtle)',
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>נסיעות שהושלמו</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38bdf8' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-secondary)' }}>
                   {stats.completed_sessions} / {stats.total_sessions}
                 </div>
               </div>
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: '#ffffff',
                   padding: '0.7rem 1.25rem',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-subtle)',
@@ -139,13 +139,13 @@ export const Dashboard = () => {
                   cursor: 'pointer',
                   border:
                     selectedProfile === prof.id
-                      ? '1px solid #ef4444'
+                      ? '1px solid var(--accent-primary)'
                       : '1px solid var(--border-subtle)',
                   background:
                     selectedProfile === prof.id
-                      ? 'rgba(239, 68, 68, 0.2)'
-                      : 'rgba(15, 23, 42, 0.6)',
-                  color: selectedProfile === prof.id ? '#ffffff' : 'var(--text-secondary)',
+                      ? '#f1eaff'
+                      : '#ffffff',
+                  color: selectedProfile === prof.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
                   transition: 'var(--transition-smooth)',
                 }}
               >
@@ -169,7 +169,7 @@ export const Dashboard = () => {
                 style={{
                   padding: '0.4rem 0.85rem',
                   fontSize: '0.8rem',
-                  background: isSel ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : undefined,
+                  background: isSel ? 'var(--accent-gradient)' : undefined,
                 }}
               >
                 {cat}
@@ -273,7 +273,7 @@ export const Dashboard = () => {
                       style={{
                         fontSize: '0.75rem',
                         color: 'var(--text-muted)',
-                        background: 'rgba(255,255,255,0.03)',
+                        background: '#f7f3ff',
                         padding: '0.15rem 0.5rem',
                         borderRadius: 'var(--radius-sm)',
                       }}
@@ -290,7 +290,7 @@ export const Dashboard = () => {
                   style={{
                     width: '100%',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    background: 'var(--accent-gradient)',
                   }}
                 >
                   <Car size={18} />

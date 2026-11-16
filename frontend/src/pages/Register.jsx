@@ -60,19 +60,19 @@ export const Register = () => {
               width: '58px',
               height: '58px',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #ef4444 0%, #f97316 50%, #6366f1 100%)',
+              background: 'var(--accent-gradient)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 1.25rem',
-              boxShadow: '0 0 25px rgba(239, 68, 68, 0.4)',
+              boxShadow: 'var(--accent-glow)',
             }}
           >
             <ShieldAlert size={34} color="#ffffff" />
           </div>
 
           <h1 style={{ fontSize: '1.85rem', fontWeight: 900, marginBottom: '0.4rem' }}>
-            הרשמה ל-<span style={{ color: '#f87171' }}>DriveAlert</span>
+            הרשמה ל-<span style={{ color: 'var(--accent-primary)' }}>DriveAlert</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             הצטרפו למערכת ניטור בטיחות נהיגה ומניעת עייפות והסחת דעת
@@ -84,7 +84,7 @@ export const Register = () => {
             style={{
               background: 'rgba(239, 68, 68, 0.15)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
+              color: '#b42318',
               padding: '0.75rem',
               borderRadius: 'var(--radius-sm)',
               fontSize: '0.85rem',
@@ -168,12 +168,12 @@ export const Register = () => {
                     borderRadius: 'var(--radius-sm)',
                     border:
                       formData.preferred_profile === prof.id
-                        ? '1px solid #ef4444'
+                        ? '1px solid var(--accent-primary)'
                         : '1px solid var(--border-subtle)',
                     background:
                       formData.preferred_profile === prof.id
-                        ? 'rgba(239, 68, 68, 0.12)'
-                        : 'rgba(15, 23, 42, 0.4)',
+                        ? '#f1eaff'
+                        : '#ffffff',
                     cursor: 'pointer',
                     transition: 'var(--transition-smooth)',
                   }}
@@ -184,10 +184,10 @@ export const Register = () => {
                     value={prof.id}
                     checked={formData.preferred_profile === prof.id}
                     onChange={handleChange}
-                    style={{ accentColor: '#ef4444' }}
+                    style={{ accentColor: 'var(--accent-primary)' }}
                   />
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#ffffff' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                       {prof.name}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -208,7 +208,7 @@ export const Register = () => {
               justifyContent: 'center',
               marginTop: '1.25rem',
               padding: '0.85rem',
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              background: 'var(--accent-gradient)',
             }}
           >
             <span>{loading ? 'יוצר פרופיל נהג...' : 'סיום והרשמה'}</span>
@@ -226,7 +226,7 @@ export const Register = () => {
         >
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
             כבר יש לך פרופיל?{' '}
-            <Link to="/login" style={{ color: '#f87171', fontWeight: 600 }}>
+            <Link to="/login" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
               התחברות כאן
             </Link>
           </p>

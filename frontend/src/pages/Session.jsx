@@ -375,7 +375,7 @@ export const Session = () => {
             <div style={{
               width: '100%',
               height: '12px',
-              background: 'rgba(255, 255, 255, 0.08)',
+              background: '#ebe5f4',
               borderRadius: 'var(--radius-full)',
               overflow: 'hidden',
               marginBottom: '1rem'
@@ -383,7 +383,7 @@ export const Session = () => {
               <div style={{
                 width: `${Number.isFinite(attentionScore) ? attentionScore : 0}%`,
                 height: '100%',
-                background: `linear-gradient(90deg, ${getScoreColor(attentionScore)} 0%, #6366f1 100%)`,
+                background: `linear-gradient(90deg, ${getScoreColor(attentionScore)} 0%, var(--accent-primary) 100%)`,
                 borderRadius: 'var(--radius-full)',
                 transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
               }} />
@@ -396,11 +396,11 @@ export const Session = () => {
               gap: '0.75rem',
               fontSize: '0.8rem'
             }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ background: '#f7f3ff', padding: '0.6rem', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ color: 'var(--text-muted)' }}>זמן שנצפה</div>
                 <div style={{ fontWeight: 700, fontSize: '1rem' }}>{videoElapsedSec} שניות</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.6rem', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ background: '#f7f3ff', padding: '0.6rem', borderRadius: 'var(--radius-sm)' }}>
                 <div style={{ color: 'var(--text-muted)' }}>דגימות שנאספו</div>
                 <div style={{ fontWeight: 700, fontSize: '1rem' }}>{sessionSamples.length}</div>
               </div>

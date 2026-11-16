@@ -24,7 +24,7 @@ export const Navbar = () => {
         top: 0,
         zIndex: 50,
         backdropFilter: 'blur(16px)',
-        backgroundColor: 'rgba(9, 13, 22, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.94)',
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
@@ -42,21 +42,21 @@ export const Navbar = () => {
         <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div
             style={{
-              background: 'linear-gradient(135deg, #ef4444 0%, #f97316 50%, #6366f1 100%)',
+              background: 'var(--accent-gradient)',
               width: '40px',
               height: '40px',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(239, 68, 68, 0.4)',
+              boxShadow: 'var(--accent-glow)',
             }}
           >
             <ShieldAlert size={22} color="#ffffff" />
           </div>
           <div>
             <span style={{ fontSize: '1.3rem', fontWeight: 900, letterSpacing: '-0.02em' }}>
-              Drive<span style={{ color: '#f87171' }}>Alert</span>
+              Drive<span style={{ color: 'var(--accent-primary)' }}>Alert</span>
             </span>
             <span
               style={{
@@ -84,9 +84,9 @@ export const Navbar = () => {
               borderRadius: 'var(--radius-sm)',
               fontWeight: 600,
               fontSize: '0.9rem',
-              color: isActive('/dashboard') ? '#ffffff' : 'var(--text-secondary)',
-              backgroundColor: isActive('/dashboard') ? 'rgba(99, 102, 241, 0.18)' : 'transparent',
-              border: isActive('/dashboard') ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid transparent',
+              color: isActive('/dashboard') ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              backgroundColor: isActive('/dashboard') ? '#f1eaff' : 'transparent',
+              border: isActive('/dashboard') ? '1px solid #dfd0fa' : '1px solid transparent',
               transition: 'var(--transition-smooth)',
             }}
           >
@@ -104,9 +104,9 @@ export const Navbar = () => {
               borderRadius: 'var(--radius-sm)',
               fontWeight: 600,
               fontSize: '0.9rem',
-              color: isActive('/history') ? '#ffffff' : 'var(--text-secondary)',
-              backgroundColor: isActive('/history') ? 'rgba(99, 102, 241, 0.18)' : 'transparent',
-              border: isActive('/history') ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid transparent',
+              color: isActive('/history') ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              backgroundColor: isActive('/history') ? '#f1eaff' : 'transparent',
+              border: isActive('/history') ? '1px solid #dfd0fa' : '1px solid transparent',
               transition: 'var(--transition-smooth)',
             }}
           >
@@ -122,13 +122,13 @@ export const Navbar = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.6rem',
-              background: 'rgba(255, 255, 255, 0.04)',
+              background: '#faf9ff',
               padding: '0.35rem 0.85rem',
               borderRadius: 'var(--radius-full)',
               border: '1px solid var(--border-subtle)',
             }}
           >
-            <User size={15} color="#38bdf8" />
+            <User size={15} color="var(--accent-secondary)" />
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user?.username}</span>
             <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>
               נהג פעיל
