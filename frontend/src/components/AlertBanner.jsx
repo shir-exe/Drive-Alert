@@ -5,7 +5,6 @@ export const AlertBanner = ({
   score = null,
   faceDetected = null,
   isDrowsy = false,
-  eyesClosed = false,
   threshold = 0.4,
   isMuted = false,
   onToggleMute,
@@ -69,17 +68,15 @@ export const AlertBanner = ({
             {isFaceMissing
               ? 'אזהרה קריטית: לא זוהו פני נהג!'
               : isDrowsinessAlert
-              ? eyesClosed
-                ? 'אזהרה: זוהתה עצימת עיניים ממושכת!'
-                : 'אזהרה: מדד הערנות נמוך!'
-              : 'התרעת עייפות / הסחת דעת קריטית! סכנת תאונה!'}
+              ? 'אזהרה: ציון הריכוז נמוך!'
+              : 'התרעה: ציון הריכוז מתחת לסף!'}
           </div>
           <div style={{ fontSize: '0.85rem', opacity: 0.95, marginTop: '0.1rem' }}>
             {isFaceMissing
-              ? 'המצלמה אינה מזהה פנים, ולכן לא ניתן לחשב את מדד הערנות.'
+              ? 'המצלמה אינה מזהה פנים, ולכן לא ניתן לחשב את מדד הריכוז.'
               : isDrowsinessAlert
-              ? `${eyesClosed ? 'זוהתה עצימת עיניים ממושכת' : 'הצטברה עצימת עיניים בחלון המדידה'}. עצור במקום בטוח אם אתה עייף.`
-              : `ציון הערנות ירד ל-${normalizedScore.toFixed(2)} (מתחת לסף הבטיחות של ${threshold.toFixed(2)}). מומלץ לעצור להתרעננות מיידית!`}
+              ? `מודל הריכוז החזיר ציון ${normalizedScore.toFixed(2)}, מתחת לסף ${threshold.toFixed(2)}.`
+              : `ציון הריכוז ${normalizedScore.toFixed(2)} נמוך מסף ${threshold.toFixed(2)}.`}
           </div>
         </div>
       </div>
@@ -119,7 +116,7 @@ export const AlertBanner = ({
             fontSize: '0.95rem',
           }}
         >
-          {isFaceMissing ? 'NO FACE' : isDrowsinessAlert ? eyesClosed ? 'EYES CLOSED' : 'LOW ALERTNESS' : `ALERT: ${normalizedScore.toFixed(2)}`}
+          {isFaceMissing ? 'NO FACE' : `ATTENTION: ${normalizedScore.toFixed(2)}`}
         </div>
       </div>
     </div>

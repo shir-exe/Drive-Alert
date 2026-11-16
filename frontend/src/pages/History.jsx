@@ -57,20 +57,20 @@ export const History = () => {
     if (normalized >= 0.7) {
       return (
         <span className="badge badge-success">
-          {normalized.toFixed(2)} ({percentage}%) • נהיגה בטוחה
+          {normalized.toFixed(2)} ({percentage}%) • ציון גבוה
         </span>
       );
     }
     if (normalized >= 0.4) {
       return (
         <span className="badge badge-warning">
-          {normalized.toFixed(2)} ({percentage}%) • ירידה בערנות
+          {normalized.toFixed(2)} ({percentage}%) • ציון בינוני
         </span>
       );
     }
     return (
       <span className="badge badge-danger">
-        {normalized.toFixed(2)} ({percentage}%) • התרעת עייפות
+        {normalized.toFixed(2)} ({percentage}%) • ציון נמוך
       </span>
     );
   };
@@ -79,10 +79,10 @@ export const History = () => {
     <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.4rem' }}>
-          יומן נסיעות וציוני <span style={{ color: '#f87171' }}>ערנות</span>
+          יומן נסיעות וציוני <span style={{ color: '#f87171' }}>ריכוז</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-          מעקב אחר פרופילי ערנות, התרעות עייפות ודוחות בטיחות נהיגה בזמן אמת
+          מעקב אחר ציוני מודל הריכוז ודוחות נסיעה
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export const History = () => {
               }}
             >
               <ShieldCheck size={20} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ציון ערנות ממוצע</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>ציון ריכוז ממוצע</span>
             </div>
             <div style={{ fontSize: '2rem', fontWeight: 900 }}>
               {Number.isFinite(stats.overall_avg_score)
@@ -295,7 +295,7 @@ export const History = () => {
                   justifyContent: 'space-between',
                 }}
               >
-                <span>התפלגות מדד ערנות לפי שניות הנסיעה (אפור = לא נמדד):</span>
+                <span>התפלגות ציון הריכוז לפי שניות הנסיעה (אפור = לא נמדד):</span>
                 <span style={{ color: 'var(--danger)', fontWeight: 700 }}>סף: 0.40</span>
               </div>
               <div

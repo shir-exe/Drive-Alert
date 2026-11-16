@@ -1,7 +1,7 @@
 import React from 'react';
 import { Activity, ShieldCheck, AlertCircle, AlertTriangle } from 'lucide-react';
 
-export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנות נהג (HUD)' }) => {
+export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ריכוז נהג (HUD)' }) => {
   const hasScore = Number.isFinite(score);
   const normalized = hasScore
     ? Math.max(0.0, Math.min(1.0, score > 1.0 ? score / 100.0 : score))
@@ -16,17 +16,17 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
 
   if (hasScore && normalized < threshold) {
     statusColor = '#ef4444'; // Red
-    statusText = 'סכנה: עייפות / הסחת דעת!';
+    statusText = 'ציון ריכוז נמוך';
     statusClass = 'badge-danger';
     IconComponent = AlertTriangle;
   } else if (hasScore && normalized < 0.7) {
     statusColor = '#f59e0b'; // Amber
-    statusText = 'זהירות: ירידה בריכוז';
+    statusText = 'ציון ריכוז בינוני';
     statusClass = 'badge-warning';
     IconComponent = AlertCircle;
   } else if (hasScore) {
     statusColor = '#10b981';
-    statusText = 'ערני וממוקד';
+    statusText = 'ציון ריכוז גבוה';
     statusClass = 'badge-success';
     IconComponent = ShieldCheck;
   }
@@ -145,7 +145,7 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
             {hasScore ? normalized.toFixed(2) : '—'}
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-            {hasScore ? `${percentage}% ערנות` : 'ממתין למדידה'}
+            {hasScore ? `${percentage}% ציון מודל` : 'ממתין למדידה'}
           </div>
         </div>
       </div>
@@ -164,11 +164,11 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
           fontSize: '0.75rem',
         }}
       >
-        <span style={{ color: 'var(--text-muted)' }}>0.00 (ישנוני)</span>
+        <span style={{ color: 'var(--text-muted)' }}>0.00 (נמוך)</span>
         <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
           סף סכנה: {threshold.toFixed(2)}
         </span>
-        <span style={{ color: 'var(--text-muted)' }}>1.00 (שיא)</span>
+        <span style={{ color: 'var(--text-muted)' }}>1.00 (גבוה)</span>
       </div>
     </div>
   );

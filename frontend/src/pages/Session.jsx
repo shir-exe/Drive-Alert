@@ -40,7 +40,6 @@ export const Session = () => {
     gazeState,
     faceDetected,
     isDistracted,
-    eyesClosed,
     profile,
     detectionStatus,
     detectionError,
@@ -238,9 +237,7 @@ export const Session = () => {
                 <span>
                   {faceDetected === false
                     ? 'לא זוהו פנים; המדידה אינה זמינה.'
-                    : eyesClosed
-                    ? 'זוהתה עצימת עיניים ממושכת; עצור/י במקום בטוח אם יש עייפות.'
-                    : 'זוהתה ירידה במדד הערנות; עצור/י במקום בטוח אם יש עייפות.'}
+                    : 'מודל הריכוז זיהה ציון מתחת לסף.'}
                 </span>
               </div>
             )}
@@ -314,10 +311,10 @@ export const Session = () => {
                 <span>
                   {faceDetected === false
                     ? 'פנים לא זוהו'
-                    : eyesClosed
-                    ? 'זוהתה עצימת עיניים'
                     : faceDetected === true
-                    ? 'פנים זוהו; כיוון מבט אינו נמדד'
+                    ? Number.isFinite(attentionScore)
+                      ? 'מודל הריכוז פעיל'
+                      : 'אוספים נתוני פנים למודל'
                     : 'ממתין לזיהוי פנים'}
                 </span>
               </div>
@@ -350,7 +347,7 @@ export const Session = () => {
             )}
             {isCameraReady && detectionStatus === 'loading' && (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.6rem' }}>
-                טוען את מודל זיהוי הפנים...
+                טוען את מודלי זיהוי הפנים והריכוז...
               </p>
             )}
           </div>
