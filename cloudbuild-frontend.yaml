@@ -9,15 +9,13 @@ steps:
       - 'frontend/Dockerfile'
       - 'frontend/'
 
-
   # 2. דחיפת התמונה ל-Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
       - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:$COMMIT_SHA'
 
-
-  # 3. פריסה אוטומטית ועדכון שירות ה-Cloud Run
+  # 3. פריסה ל-Cloud Run תוך הגדרת פורט 80 במפורש
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -30,7 +28,8 @@ steps:
       - 'europe-north1'
       - '--platform'
       - 'managed'
-
+      - '--port'
+      - '80'
 
 images:
   - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:$COMMIT_SHA'
