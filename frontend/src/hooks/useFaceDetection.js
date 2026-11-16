@@ -73,7 +73,7 @@ export const useFaceDetection = (videoRef, isCameraReady, alertThreshold = 0.4) 
       try {
         ort.env.wasm.numThreads = 1;
         landmarker = await createFaceLandmarker();
-        session = await ort.InferenceSession.create('/models/v4_66.onnx', {
+        session = await ort.InferenceSession.create('/models/v4_2.onnx', {
           executionProviders: ['wasm'],
         });
         if (!active) {
@@ -83,7 +83,7 @@ export const useFaceDetection = (videoRef, isCameraReady, alertThreshold = 0.4) 
         }
         landmarkerRef.current = landmarker;
         onnxSessionRef.current = session;
-        console.info('[DriveAlert] FaceLandmarker and concentration model v4_66 are ready.');
+        console.info('[DriveAlert] FaceLandmarker and concentration model v4_2 are ready.');
         setDetectionStatus('ready');
       } catch (error) {
         console.error('[DriveAlert] Vision model initialization failed:', error);

@@ -134,7 +134,7 @@ export const useDriverMonitor = (threshold = 0.4) => {
     cameraStarting,
     cameraError,
     attentionScore,
-    scoreDescription: 'ציון הריכוז מחושב על ידי מודל v4_66 ONNX על רצף נקודות פנים.',
+    scoreDescription: 'ציון הריכוז מחושב על ידי מודל v4_2 ONNX על רצף נקודות פנים.',
     faceDetected,
     isDrowsy: isDrowsy || faceDetected === false,
     gazeState: faceDetected === false ? 'away' : isDrowsy ? 'distracted' : faceDetected === true ? 'focused' : 'unknown',
