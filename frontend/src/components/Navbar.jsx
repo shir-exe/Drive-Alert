@@ -83,7 +83,7 @@ export const Navbar = () => {
             }}
           >
             <Compass size={17} />
-            <span>ספריית מסלולים</span>
+            <span>מסלולי נהיגה</span>
           </Link>
           <Link
             to="/history"

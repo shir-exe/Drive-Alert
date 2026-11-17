@@ -21,8 +21,6 @@ export const Dashboard = () => {
   const [routeForm, setRouteForm] = useState({
     title: '',
     description: '',
-    video_url: '',
-    duration_seconds: '180',
     category: 'Highway',
     difficulty: 'Normal',
   });
@@ -60,21 +58,20 @@ export const Dashboard = () => {
     try {
       const created = await contentService.create({
         ...routeForm,
-        duration_seconds: Number(routeForm.duration_seconds),
+        video_url: '',
+        duration_seconds: 0,
       });
       setRoutesList((current) => [created, ...current]);
       setSelectedCategory('');
       setRouteForm({
         title: '',
         description: '',
-        video_url: '',
-        duration_seconds: '180',
         category: 'Highway',
         difficulty: 'Normal',
       });
       setShowCreateForm(false);
     } catch (err) {
-      setFormError(err.response?.data?.detail || 'לא ניתן להוסיף את הסרטון. בדקו את הפרטים ונסו שוב.');
+      setFormError(err.response?.data?.detail || 'לא ניתן להוסיף את הנסיעה. בדקו את הפרטים ונסו שוב.');
     } finally {
       setSavingRoute(false);
     }
@@ -87,7 +84,7 @@ export const Dashboard = () => {
       await contentService.deleteById(route.id);
       setRoutesList((current) => current.filter((item) => item.id !== route.id));
     } catch (err) {
-      setActionError(err.response?.data?.detail || 'לא ניתן למחוק את הסרטון. נסו שוב.');
+      setActionError(err.response?.data?.detail || 'לא ניתן למחוק את הנסיעה. נסו שוב.');
     }
   };
 
@@ -245,7 +242,7 @@ export const Dashboard = () => {
           className="btn-primary"
         >
           <Plus size={18} />
-          <span>{showCreateForm ? 'סגירת טופס' : 'הוספת סרטון לספרייה'}</span>
+          <span>{showCreateForm ? 'סגירת טופס' : '          הוספת נסיעה לספרייה'}</span>
         </button>
       </div>
 
@@ -256,7 +253,7 @@ export const Dashboard = () => {
           style={{ padding: '1.5rem', marginBottom: '1.5rem' }}
         >
           <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem' }}>
-            הוספת סרטון נהיגה
+            הוספת נסיעה אמיתית
           </h2>
           {formError && (
             <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{formError}</p>
@@ -272,30 +269,6 @@ export const Dashboard = () => {
                 maxLength={150}
                 value={routeForm.title}
                 onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-video-url">קישור ישיר לסרטון (HTTPS)</label>
-              <input
-                id="route-video-url"
-                className="form-input"
-                type="url"
-                required
-                placeholder="https://example.com/drive.mp4"
-                value={routeForm.video_url}
-                onChange={(event) => setRouteForm({ ...routeForm, video_url: event.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-duration">משך הסרטון בשניות</label>
-              <input
-                id="route-duration"
-                className="form-input"
-                type="number"
-                min="1"
-                required
-                value={routeForm.duration_seconds}
-                onChange={(event) => setRouteForm({ ...routeForm, duration_seconds: event.target.value })}
               />
             </div>
             <div className="form-group">
@@ -326,7 +299,7 @@ export const Dashboard = () => {
           </div>
           <button type="submit" className="btn-primary" disabled={savingRoute}>
             <Plus size={17} />
-            <span>{savingRoute ? 'שומר...' : 'שמירת הסרטון'}</span>
+              <span>{savingRoute ? 'שומר...' : 'שמירת נסיעה'}</span>
           </button>
         </form>
       )}
@@ -345,7 +318,7 @@ export const Dashboard = () => {
         </div>
       ) : routesList.length === 0 ? (
         <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>הספרייה שלך עדיין ריקה. הוסיפו סרטון כדי להתחיל.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>הספרייה שלך עדיין ריקה. הוסיפו יעד נסיעה כדי להתחיל.</p>
         </div>
       ) : (
         <div
@@ -403,7 +376,7 @@ export const Dashboard = () => {
                   }}
                 >
                   <Clock size={13} />
-                  <span>{Math.floor(item.duration_seconds / 60)} דקות</span>
+                  <span>נסיעה בזמן אמת</span>
                 </div>
               </div>
 

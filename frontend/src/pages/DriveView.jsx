@@ -32,16 +32,21 @@ export const DriveView = () => {
   const [loading, setLoading] = useState(true);
   const [initializationError, setInitializationError] = useState('');
   const [videoElapsedSec, setVideoElapsedSec] = useState(0);
-  const [videoError, setVideoError] = useState('');
   const [telemetryError, setTelemetryError] = useState('');
   const [finishError, setFinishError] = useState('');
   const [isFinishing, setIsFinishing] = useState(false);
+  const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [gpsStatus, setGpsStatus] = useState('מבקש הרשאת מיקום...');
+  const [distanceMeters, setDistanceMeters] = useState(0);
 
-  const roadVideoRef = useRef(null);
   const metricsRef = useRef({});
-  const lastVideoTimeRef = useRef(null);
-  const lastSampledSecondRef = useRef(null);
-  const watchedSecondsRef = useRef(0);
+  const tripStartedRef = useRef(null);
+  const lastGpsRef = useRef(null);
+  const totalDistanceRef = useRef(0);
+  const lastSampledSecondRef = useRef(-1);
+  const gpsWatchRef = useRef(null);
+  const currentSpeedRef = useRef(0);
+  const driveReadingsRef = useRef([]);
 
   // Driver monitoring uses MediaPipe eye-blink blendshapes and a PERCLOS alertness proxy.
   const {
@@ -96,31 +101,71 @@ export const DriveView = () => {
     };
   }, [routeId, profileId, stopCamera]);
 
-  // Keep the sampler stable while live camera metrics update many times per second.
+  // Real GPS speed, position and distance tracking.
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGpsStatus('GPS אינו נתמך בדפדפן זה');
+      return undefined;
+    }
+
+    tripStartedRef.current = Date.now();
+    gpsWatchRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, speed } = position.coords;
+        const gpsSpeed = Number.isFinite(speed) ? Math.max(0, speed * 3.6) : 0;
+        currentSpeedRef.current = Number(gpsSpeed.toFixed(1));
+        setCurrentSpeed(Number(gpsSpeed.toFixed(1)));
+        setGpsStatus('GPS פעיל');
+
+        if (lastGpsRef.current) {
+          const earthRadiusMeters = 6371000;
+          const previous = lastGpsRef.current;
+          const lat1 = previous.latitude * Math.PI / 180;
+          const lat2 = latitude * Math.PI / 180;
+          const deltaLat = (latitude - previous.latitude) * Math.PI / 180;
+          const deltaLon = (longitude - previous.longitude) * Math.PI / 180;
+          const haversine =
+            Math.sin(deltaLat / 2) ** 2 +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+          const meters = 2 * earthRadiusMeters * Math.asin(Math.sqrt(haversine));
+          if (meters >= 1 && meters < 1000) {
+            totalDistanceRef.current += meters;
+            setDistanceMeters(totalDistanceRef.current);
+          }
+        }
+        lastGpsRef.current = { latitude, longitude };
+      },
+      (error) => {
+        const messages = {
+          1: 'הרשאת מיקום נדחתה. יש לאשר GPS בדפדפן.',
+          2: 'המיקום אינו זמין כרגע. בדקו ש-GPS פעיל.',
+          3: 'בקשת המיקום נמשכת זמן רב ולא התקבלה.',
+        };
+        setGpsStatus(messages[error.code] || 'שגיאה בקבלת מיקום');
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
+    );
+
+    return () => {
+      if (gpsWatchRef.current !== null) navigator.geolocation.clearWatch(gpsWatchRef.current);
+    };
+  }, []);
+
+  // Keep live attention and GPS telemetry while the real drive is active.
   useEffect(() => {
     if (!activeSession) return;
 
     const interval = setInterval(async () => {
-      const video = roadVideoRef.current;
-      if (!video || video.paused || video.ended || video.readyState < 2) {
-        lastVideoTimeRef.current = video?.currentTime ?? null;
-        return;
-      }
-
-      const currentTime = video.currentTime;
-      const previousTime = lastVideoTimeRef.current;
-      lastVideoTimeRef.current = currentTime;
-      if (previousTime === null || currentTime <= previousTime) return;
-
-      watchedSecondsRef.current += Math.min(currentTime - previousTime, 1.5);
-      setVideoElapsedSec(Math.floor(watchedSecondsRef.current));
-
-      const currentSec = Math.floor(currentTime);
+      const currentSec = tripStartedRef.current
+        ? Math.floor((Date.now() - tripStartedRef.current) / 1000)
+        : 0;
+      setVideoElapsedSec(currentSec);
       if (currentSec === lastSampledSecondRef.current) return;
       lastSampledSecondRef.current = currentSec;
 
       const { attentionScore: score, faceDetected: detectedFace, gazeState: gaze, isDrowsy: drowsy } = metricsRef.current;
       const normalizedScore = Number.isFinite(score) ? Number(score.toFixed(2)) : null;
+      const position = lastGpsRef.current;
       const reading = {
         position: currentSec,
         timestamp_sec: currentSec,
@@ -129,11 +174,31 @@ export const DriveView = () => {
         face_detected: detectedFace,
         gaze_state: gaze,
         is_drowsy: normalizedScore === null ? null : drowsy,
+        speed_kmh: currentSpeedRef.current,
+        latitude: position?.latitude ?? null,
+        longitude: position?.longitude ?? null,
+        distance_m: totalDistanceRef.current,
       };
 
-      setDriveReadings((previous) => [...previous, reading]);
+      setDriveReadings((previous) => {
+        const next = [...previous, reading];
+        driveReadingsRef.current = next;
+        return next;
+      });
       try {
         await sessionService.sendReadings(activeSession.id, reading);
+        if (currentSec > 0 && currentSec % 30 === 0) {
+          const scored = driveReadingsRef.current.filter((item) => Number.isFinite(item.score));
+          const avg = scored.length
+            ? Number((scored.reduce((sum, item) => sum + item.score, 0) / scored.length).toFixed(2))
+            : null;
+          await sessionService.updateSession(activeSession.id, {
+            readings: driveReadingsRef.current,
+            average_score: avg,
+            duration_watched_sec: currentSec,
+            is_completed: false,
+          });
+        }
         setTelemetryError('');
       } catch (error) {
         console.error('Failed to sync live telemetry:', error);
@@ -156,15 +221,18 @@ export const DriveView = () => {
     setIsFinishing(true);
     setFinishError('');
     try {
-      const scoredReadings = driveReadings.filter((reading) => Number.isFinite(reading.score));
+      const finalReadings = driveReadingsRef.current;
+      const scoredReadings = finalReadings.filter((reading) => Number.isFinite(reading.score));
       const avg = scoredReadings.length > 0
         ? Number((scoredReadings.reduce((acc, reading) => acc + reading.score, 0) / scoredReadings.length).toFixed(2))
         : null;
 
       await sessionService.updateSession(activeSession.id, {
-        readings: driveReadings,
+        readings: finalReadings,
         average_score: avg,
-        duration_watched_sec: watchedSecondsRef.current,
+        duration_watched_sec: tripStartedRef.current
+          ? Math.floor((Date.now() - tripStartedRef.current) / 1000)
+          : videoElapsedSec,
         is_completed: completed,
       });
 
@@ -281,89 +349,39 @@ export const DriveView = () => {
           alignItems: 'start',
         }}
       >
-        {/* Left Column: Road Driving Video Player */}
+        {/* Left Column: Live real-drive telemetry */}
         <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)' }}>
           <div
             style={{
-              position: 'relative',
-              width: '100%',
-              aspectRatio: '16/9',
-              background: '#020617',
+              minHeight: '360px',
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
               borderRadius: 'var(--radius-sm)',
-              overflow: 'hidden',
-              boxShadow: isDrowsy ? '0 0 30px rgba(239, 68, 68, 0.4)' : undefined,
-              border: isDrowsy ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+              color: '#ffffff',
+              display: 'grid',
+              placeItems: 'center',
+              textAlign: 'center',
+              padding: '2rem',
             }}
           >
-            {videoError ? (
-              <div className="video-error" role="alert">
-                <div className="video-error-content">
-                  <AlertTriangle size={32} color="#fbbf24" />
-                  <h3>לא ניתן לטעון את סרטון המסלול</h3>
-                  <p>
-                    ייתכן שהקובץ אינו קיים או שהקישור אינו נגיש. אם הסרטון מאוחסן ב-Google Cloud Storage,
-                    בדקו הרשאת קריאה לקובץ או השתמשו בקישור חתום תקף.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => {
-                      setVideoError('');
-                      roadVideoRef.current?.load();
-                    }}
-                    style={{ marginTop: '1rem' }}
-                  >
-                    ניסיון טעינה מחדש
-                  </button>
+            <div>
+              <div style={{ fontSize: '5.5rem', fontWeight: 900, lineHeight: 1 }}>
+                {Math.round(currentSpeed)}
+              </div>
+              <div style={{ fontSize: '1.2rem', color: '#c4b5fd', marginTop: '0.5rem' }}>קמ״ש</div>
+              <div style={{ marginTop: '1.25rem', color: '#e2e8f0', fontSize: '0.95rem' }}>
+                {gpsStatus}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '2.5rem', marginTop: '2rem' }}>
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.78rem' }}>מרחק מצטבר</div>
+                  <div style={{ fontWeight: 800, marginTop: '0.25rem' }}>{(distanceMeters / 1000).toFixed(2)} ק״מ</div>
+                </div>
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.78rem' }}>משך נסיעה</div>
+                  <div style={{ fontWeight: 800, marginTop: '0.25rem' }}>{videoElapsedSec} שניות</div>
                 </div>
               </div>
-            ) : (
-              <video
-                ref={roadVideoRef}
-                src={route?.video_url}
-                controls
-                playsInline
-                preload="metadata"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                onLoadStart={() => setVideoError('')}
-                onError={() => setVideoError('video-load-failed')}
-                onPlay={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
-                onPause={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
-                onSeeking={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
-                onEnded={() => handleCompleteDrive(true)}
-              />
-            )}
-
-            {/* In-cockpit Heads-Up Alert Indicator */}
-            {isDrowsy && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '18px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: 'rgba(239, 68, 68, 0.95)',
-                  color: '#ffffff',
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: 'var(--radius-full)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  boxShadow: '0 4px 25px rgba(239, 68, 68, 0.7)',
-                  animation: 'pulseGlow 1.2s infinite',
-                  pointerEvents: 'none',
-                }}
-              >
-                <AlertTriangle size={20} />
-                <span>
-                  {faceDetected === false
-                    ? 'התראה: פני הנהג אינם מזוהים!'
-                    : 'התראה: ירידה בריכוז / הסחת דעת מהכביש!'}
-                </span>
-              </div>
-            )}
+            </div>
           </div>
 
           <div style={{ marginTop: '1rem', padding: '0 0.5rem' }}>
@@ -610,7 +628,7 @@ export const DriveView = () => {
               </div>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.74rem', marginTop: '0.7rem' }}>
-              המדידה מתעדכנת רק כשהסרטון מתנגן ומתקדם.
+              המדידה מתעדכנת לאורך הנסיעה בזמן אמת.
             </p>
             {telemetryError && (
               <p role="status" style={{ color: 'var(--warning)', fontSize: '0.78rem', marginTop: '0.5rem' }}>

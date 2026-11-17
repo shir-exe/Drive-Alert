@@ -125,7 +125,8 @@ async def update_or_finish_session(
         update_fields["duration_watched_sec"] = update_data.duration_watched_sec
     if update_data.is_completed is not None:
         update_fields["is_completed"] = update_data.is_completed
-        update_fields["end_time"] = datetime.utcnow()
+        if update_data.is_completed:
+            update_fields["end_time"] = datetime.utcnow()
 
     # Collect incoming readings / samples
     incoming_readings = update_data.readings or update_data.samples

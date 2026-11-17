@@ -174,7 +174,7 @@ export const History = () => {
             <div style={{ fontSize: '2rem', fontWeight: 900, marginTop: '0.35rem' }}>
               {formatDuration(stats.total_watch_seconds)}
             </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.77rem' }}>זמן שבו הסרטון התקדם</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.77rem' }}>זמן נסיעה אמיתי</div>
           </div>
         </div>
       )}
@@ -324,10 +324,10 @@ export const History = () => {
             {chartGroups.length > 0 ? (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: '0.55rem' }}>
-                  <span>מדד ערנות לאורך הסרטון</span>
+                  <span>מדד ערנות לאורך הנסיעה</span>
                   <span>{measuredReadings} מתוך {selectedReadings.length} דגימות עם ציון</span>
                 </div>
-                <div className="telemetry-chart" role="img" aria-label="תרשים מדד ערנות לאורך הסרטון">
+                <div className="telemetry-chart" role="img" aria-label="תרשים מדד ערנות לאורך הנסיעה">
                   {chartGroups.map((group, index) => {
                     const percentage = Math.round(group.average * 100);
                     const color = group.average < 0.4 ? 'var(--danger)' : group.average < 0.7 ? 'var(--warning)' : 'var(--success)';
@@ -342,9 +342,9 @@ export const History = () => {
                   })}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.72rem', marginTop: '0.4rem' }}>
-                  <span>תחילת סרטון</span>
+                  <span>תחילת נסיעה</span>
                   <span>מדד משוער, אינו מדידה רפואית או תחליף למערכת בטיחות</span>
-                  <span>סוף סרטון</span>
+                  <span>סוף נסיעה</span>
                 </div>
               </>
             ) : (
@@ -353,7 +353,7 @@ export const History = () => {
                   <BarChart2 size={28} color="var(--text-muted)" />
                   <p style={{ marginTop: '0.6rem', fontWeight: 750, color: 'var(--text-primary)' }}>אין עדיין נתוני מדידה להצגה</p>
                   <p style={{ maxWidth: '460px', marginTop: '0.3rem', fontSize: '0.85rem' }}>
-                    כדי ליצור דוח, אשרו גישה למצלמה, המתינו לטעינת מודל הזיהוי והשאירו את הסרטון מתנגן. אם הסרטון לא נטען, בדקו את הרשאות הקישור שלו.
+                    כדי ליצור דוח, אשרו גישה למצלמה וה-GPS, והמתינו לטעינת מודל הזיהוי. הנתונים נשמרים לאורך הנסיעה.
                   </p>
                 </div>
               </div>

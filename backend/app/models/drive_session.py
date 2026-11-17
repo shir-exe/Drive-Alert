@@ -11,6 +11,10 @@ class DriveReading(BaseModel):
     face_detected: Optional[bool] = Field(default=True, description="Whether driver face was detected by camera")
     gaze_state: str = Field(default="unknown", description="focused, drowsy, distracted, away, unknown")
     is_drowsy: Optional[bool] = Field(default=None, description="True if score < 0.4 or drowsy")
+    speed_kmh: Optional[float] = Field(default=None, ge=0.0, description="Real GPS speed in km/h")
+    latitude: Optional[float] = Field(default=None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(default=None, ge=-180.0, le=180.0)
+    distance_m: Optional[float] = Field(default=None, ge=0.0)
     metadata: Optional[Dict[str, Any]] = None
 
     def model_post_init(self, __context):
