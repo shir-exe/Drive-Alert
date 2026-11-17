@@ -154,9 +154,12 @@ export const Dashboard = () => {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ציון ערנות ממוצע</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)' }}>
                   {Number.isFinite(stats.overall_avg_score)
-                    ? `${stats.overall_avg_score <= 1.0 ? stats.overall_avg_score : (stats.overall_avg_score / 100).toFixed(2)} (${stats.overall_avg_score > 1.0 ? stats.overall_avg_score : Math.round(stats.overall_avg_score * 100)}%)`
-                    : 'לא זמין'}
+                    ? `${Math.round((stats.overall_avg_score > 1 ? stats.overall_avg_score / 100 : stats.overall_avg_score) * 100)}%`
+                    : '—'}
                 </div>
+                {!Number.isFinite(stats.overall_avg_score) && (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>יופיע לאחר איסוף דגימות תקינות</div>
+                )}
               </div>
             </div>
           )}

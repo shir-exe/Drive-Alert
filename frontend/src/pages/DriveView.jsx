@@ -30,9 +30,18 @@ export const DriveView = () => {
   const [activeSession, setActiveSession] = useState(null);
   const [driveReadings, setDriveReadings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initializationError, setInitializationError] = useState('');
   const [videoElapsedSec, setVideoElapsedSec] = useState(0);
+  const [videoError, setVideoError] = useState('');
+  const [telemetryError, setTelemetryError] = useState('');
+  const [finishError, setFinishError] = useState('');
+  const [isFinishing, setIsFinishing] = useState(false);
 
   const roadVideoRef = useRef(null);
+  const metricsRef = useRef({});
+  const lastVideoTimeRef = useRef(null);
+  const lastSampledSecondRef = useRef(null);
+  const watchedSecondsRef = useRef(0);
 
   // Driver monitoring uses MediaPipe eye-blink blendshapes and a PERCLOS alertness proxy.
   const {
@@ -55,11 +64,14 @@ export const DriveView = () => {
     toggleMute,
   } = useDriverMonitor(alertThreshold);
 
+  metricsRef.current = { attentionScore, faceDetected, gazeState, isDrowsy };
+
   // Initialize Route & Backend Drive Session
   useEffect(() => {
     const initDrive = async () => {
       try {
         setLoading(true);
+        setInitializationError('');
         const routeData = await contentService.getById(routeId);
         setRoute(routeData);
 
@@ -71,6 +83,7 @@ export const DriveView = () => {
         setActiveSession(newSession);
       } catch (err) {
         console.error('Drive session initialization error:', err);
+        setInitializationError(err.response?.data?.detail || 'לא ניתן לטעון את המסלול או לפתוח נסיעה. נסו לחזור לספרייה ולפתוח אותו שוב.');
       } finally {
         setLoading(false);
       }
@@ -83,47 +96,65 @@ export const DriveView = () => {
     };
   }, [routeId, profileId, stopCamera]);
 
-  // Periodic Telemetry Logger (saves score & position)
+  // Keep the sampler stable while live camera metrics update many times per second.
   useEffect(() => {
     if (!activeSession) return;
 
     const interval = setInterval(async () => {
-      if (roadVideoRef.current && !roadVideoRef.current.paused) {
-        const currentSec = Math.round(roadVideoRef.current.currentTime);
-        setVideoElapsedSec(currentSec);
+      const video = roadVideoRef.current;
+      if (!video || video.paused || video.ended || video.readyState < 2) {
+        lastVideoTimeRef.current = video?.currentTime ?? null;
+        return;
+      }
 
-        const reading = {
-          position: currentSec,
-          timestamp_sec: currentSec,
-          score: attentionScore === null ? null : Number(attentionScore.toFixed(2)),
-          attention_score: attentionScore === null ? null : Number(attentionScore.toFixed(2)),
-          face_detected: faceDetected,
-          gaze_state: gazeState,
-          is_drowsy: attentionScore === null ? null : isDrowsy,
-        };
+      const currentTime = video.currentTime;
+      const previousTime = lastVideoTimeRef.current;
+      lastVideoTimeRef.current = currentTime;
+      if (previousTime === null || currentTime <= previousTime) return;
 
-        setDriveReadings((prev) => [...prev, reading]);
+      watchedSecondsRef.current += Math.min(currentTime - previousTime, 1.5);
+      setVideoElapsedSec(Math.floor(watchedSecondsRef.current));
 
-        // Non-blocking sync with backend readings
-        try {
-          await sessionService.sendReadings(activeSession.id, reading);
-        } catch (e) {
-          // Keep local buffer if offline
-        }
+      const currentSec = Math.floor(currentTime);
+      if (currentSec === lastSampledSecondRef.current) return;
+      lastSampledSecondRef.current = currentSec;
+
+      const { attentionScore: score, faceDetected: detectedFace, gazeState: gaze, isDrowsy: drowsy } = metricsRef.current;
+      const normalizedScore = Number.isFinite(score) ? Number(score.toFixed(2)) : null;
+      const reading = {
+        position: currentSec,
+        timestamp_sec: currentSec,
+        score: normalizedScore,
+        attention_score: normalizedScore,
+        face_detected: detectedFace,
+        gaze_state: gaze,
+        is_drowsy: normalizedScore === null ? null : drowsy,
+      };
+
+      setDriveReadings((previous) => [...previous, reading]);
+      try {
+        await sessionService.sendReadings(activeSession.id, reading);
+        setTelemetryError('');
+      } catch (error) {
+        console.error('Failed to sync live telemetry:', error);
+        setTelemetryError('הדגימות נשמרות זמנית במכשיר, אך הסנכרון לשרת נכשל. הן יישלחו שוב עם שמירת הנסיעה.');
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeSession, attentionScore, faceDetected, gazeState, isDrowsy]);
+  }, [activeSession]);
 
   // Finalize Drive Session
   const handleCompleteDrive = async (completed = true) => {
+    if (isFinishing) return;
     if (!activeSession) {
       stopCamera();
       navigate('/history');
       return;
     }
 
+    setIsFinishing(true);
+    setFinishError('');
     try {
       const scoredReadings = driveReadings.filter((reading) => Number.isFinite(reading.score));
       const avg = scoredReadings.length > 0
@@ -133,7 +164,7 @@ export const DriveView = () => {
       await sessionService.updateSession(activeSession.id, {
         readings: driveReadings,
         average_score: avg,
-        duration_watched_sec: videoElapsedSec,
+        duration_watched_sec: watchedSecondsRef.current,
         is_completed: completed,
       });
 
@@ -141,8 +172,8 @@ export const DriveView = () => {
       navigate('/history');
     } catch (err) {
       console.error('Failed to finalize drive session:', err);
-      stopCamera();
-      navigate('/history');
+      setFinishError('לא ניתן היה לשמור את הנסיעה. בדקו את החיבור ונסו שוב; הנתונים עדיין מוצגים כאן.');
+      setIsFinishing(false);
     }
   };
 
@@ -150,6 +181,21 @@ export const DriveView = () => {
     return (
       <div style={{ textAlign: 'center', padding: '6rem 0', color: 'var(--text-secondary)' }}>
         מכין את מערכות ה-AI ומתחבר למסלול הנהיגה...
+      </div>
+    );
+  }
+
+  if (initializationError) {
+    return (
+      <div style={{ maxWidth: '720px', margin: '3rem auto', padding: '0 1.25rem' }}>
+        <div className="glass-panel" role="alert" style={{ padding: '2rem', textAlign: 'center' }}>
+          <AlertTriangle size={30} color="var(--warning)" />
+          <h2 style={{ marginTop: '0.6rem', fontSize: '1.2rem', fontWeight: 850 }}>לא ניתן לפתוח את הנסיעה</h2>
+          <p style={{ margin: '0.5rem 0 1.25rem', color: 'var(--text-secondary)' }}>{initializationError}</p>
+          <button type="button" className="btn-primary" onClick={() => navigate('/dashboard')}>
+            חזרה לספריית המסלולים
+          </button>
+        </div>
       </div>
     );
   }
@@ -201,13 +247,16 @@ export const DriveView = () => {
           <button
             onClick={() => handleCompleteDrive(true)}
             className="btn-primary"
+            disabled={isFinishing}
             style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
           >
             <CheckCircle size={18} />
-            <span>סיום נסיעה ושמירת דוח</span>
+            <span>{isFinishing ? 'שומר נסיעה...' : 'סיום נסיעה ושמירת דוח'}</span>
           </button>
         </div>
       </div>
+
+      {finishError && <p className="page-error" role="alert" style={{ marginBottom: '1rem' }}>{finishError}</p>}
 
       {/* Prominent Fatigue/Distraction Alert Banner (< 0.4 or Face Missing) */}
       <div style={{ marginBottom: '1.25rem' }}>
@@ -224,6 +273,7 @@ export const DriveView = () => {
 
       {/* Main Grid: Road View (Left) & Driver Cockpit Monitor HUD (Right) */}
       <div
+        className="drive-layout"
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) 390px',
@@ -245,14 +295,44 @@ export const DriveView = () => {
               border: isDrowsy ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
             }}
           >
-            <video
-              ref={roadVideoRef}
-              src={route?.video_url}
-              controls
-              autoPlay
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              onEnded={() => handleCompleteDrive(true)}
-            />
+            {videoError ? (
+              <div className="video-error" role="alert">
+                <div className="video-error-content">
+                  <AlertTriangle size={32} color="#fbbf24" />
+                  <h3>לא ניתן לטעון את סרטון המסלול</h3>
+                  <p>
+                    ייתכן שהקובץ אינו קיים או שהקישור אינו נגיש. אם הסרטון מאוחסן ב-Google Cloud Storage,
+                    בדקו הרשאת קריאה לקובץ או השתמשו בקישור חתום תקף.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setVideoError('');
+                      roadVideoRef.current?.load();
+                    }}
+                    style={{ marginTop: '1rem' }}
+                  >
+                    ניסיון טעינה מחדש
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <video
+                ref={roadVideoRef}
+                src={route?.video_url}
+                controls
+                playsInline
+                preload="metadata"
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onLoadStart={() => setVideoError('')}
+                onError={() => setVideoError('video-load-failed')}
+                onPlay={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
+                onPause={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
+                onSeeking={() => { lastVideoTimeRef.current = roadVideoRef.current?.currentTime ?? null; }}
+                onEnded={() => handleCompleteDrive(true)}
+              />
+            )}
 
             {/* In-cockpit Heads-Up Alert Indicator */}
             {isDrowsy && (
@@ -529,6 +609,14 @@ export const DriveView = () => {
                 <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{driveReadings.length}</div>
               </div>
             </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.74rem', marginTop: '0.7rem' }}>
+              המדידה מתעדכנת רק כשהסרטון מתנגן ומתקדם.
+            </p>
+            {telemetryError && (
+              <p role="status" style={{ color: 'var(--warning)', fontSize: '0.78rem', marginTop: '0.5rem' }}>
+                {telemetryError}
+              </p>
+            )}
           </div>
         </div>
       </div>
