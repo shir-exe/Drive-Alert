@@ -11,6 +11,65 @@ from app.models.route import RouteCreate, RouteResponse
 
 router = APIRouter(prefix="/content", tags=["Content & Driving Routes"])
 
+DEFAULT_ROUTES = [
+    {
+        "_id": ObjectId("000000000000000000000001"),
+        "title": "נסיעה עירונית",
+        "description": "מסלול עירוני לתרגול נהיגה בתנועה משתנה ובצמתים.",
+        "video_url": "",
+        "duration_seconds": 0,
+        "category": "Urban Traffic",
+        "difficulty": "Normal",
+        "tags": ["עירוני", "תנועה"],
+    },
+    {
+        "_id": ObjectId("000000000000000000000002"),
+        "title": "נסיעה בכביש מהיר",
+        "description": "מסלול כביש מהיר לנסיעה רציפה ולשמירה על ערנות.",
+        "video_url": "",
+        "duration_seconds": 0,
+        "category": "Highway",
+        "difficulty": "Easy",
+        "tags": ["כביש מהיר", "נסיעה רציפה"],
+    },
+    {
+        "_id": ObjectId("000000000000000000000003"),
+        "title": "נסיעה בכביש הררי",
+        "description": "מסלול עם עליות, ירידות ופניות.",
+        "video_url": "",
+        "duration_seconds": 0,
+        "category": "Mountain Pass",
+        "difficulty": "Challenging",
+        "tags": ["הררי", "פניות"],
+    },
+    {
+        "_id": ObjectId("000000000000000000000004"),
+        "title": "נסיעת לילה",
+        "description": "מסלול לתרגול נהיגה בתנאי תאורה מופחתת.",
+        "video_url": "",
+        "duration_seconds": 0,
+        "category": "Night Drive",
+        "difficulty": "Normal",
+        "tags": ["לילה", "תאורה מופחתת"],
+    },
+]
+
+
+async def ensure_default_routes(db) -> None:
+    for route in DEFAULT_ROUTES:
+        await db["content"].update_one(
+            {"_id": route["_id"]},
+            {
+                "$setOnInsert": {
+                    **{key: value for key, value in route.items() if key != "_id"},
+                    "owner_id": "system",
+                    "is_default": True,
+                    "created_at": datetime.utcnow(),
+                }
+            },
+            upsert=True,
+        )
+
 
 async def migrate_legacy_content(user_id: str, db) -> None:
     user_oid = ObjectId(user_id)
@@ -76,6 +135,7 @@ def to_route_response(item: dict) -> RouteResponse:
         difficulty=item.get("difficulty", "Normal"),
         thumbnail_url=item.get("thumbnail_url"),
         tags=item.get("tags", []),
+        is_default=item.get("is_default", False),
         created_at=item.get("created_at", datetime.utcnow())
     )
 
@@ -86,9 +146,10 @@ async def list_routes(
     current_user: UserResponse = Depends(get_current_user),
     db=Depends(get_database)
 ):
-    """Retrieve only the authenticated user's driving routes."""
+    """Retrieve the authenticated user's routes and shared default routes."""
+    await ensure_default_routes(db)
     await migrate_legacy_content(current_user.id, db)
-    query = {"owner_id": current_user.id}
+    query = {"$or": [{"owner_id": current_user.id}, {"is_default": True}]}
     if category and category != "הכל":
         query["category"] = category
 
@@ -109,7 +170,10 @@ async def get_route(
     except (InvalidId, TypeError):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
 
-    doc = await db["content"].find_one({"_id": oid, "owner_id": current_user.id})
+    doc = await db["content"].find_one({
+        "_id": oid,
+        "$or": [{"owner_id": current_user.id}, {"is_default": True}]
+    })
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
 

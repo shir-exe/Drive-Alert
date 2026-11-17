@@ -33,7 +33,7 @@ async def start_session(
 
     content_doc = await db["content"].find_one({
         "_id": content_oid,
-        "owner_id": current_user.id
+        "$or": [{"owner_id": current_user.id}, {"is_default": True}]
     })
     if content_doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")

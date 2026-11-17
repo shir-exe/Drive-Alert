@@ -94,7 +94,7 @@ export const Dashboard = () => {
     }
   };
 
-  const categories = ['הכל', 'Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass'];
+  const categories = ['הכל', 'Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass', 'Night Drive'];
 
   return (
     <div className="page-shell dashboard-page" style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
@@ -248,7 +248,7 @@ export const Dashboard = () => {
           className="btn-primary"
         >
           <Plus size={18} />
-          <span>{showCreateForm ? 'סגירת טופס' : '          הוספת נסיעה לספרייה'}</span>
+          <span>{showCreateForm ? 'סגירת טופס' : 'הוספת מסלול נסיעה'}</span>
         </button>
       </div>
 
@@ -260,85 +260,89 @@ export const Dashboard = () => {
         >
           <div style={{ marginBottom: '1rem' }}>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-              הוספת נסיעה אמיתית
+              יצירת מסלול נסיעה
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
-              הזינו נתונים שיופיעו בספרייה ובדוח הנסיעה ויעזרו לזהות את ההקשר.
+              צריך רק לתת למסלול שם. פרטים נוספים אפשר להוסיף לפי הצורך.
             </p>
           </div>
           {formError && (
             <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{formError}</p>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-title">כותרת</label>
-              <input
-                id="route-title"
-                className="form-input"
-                required
-                minLength={2}
-                maxLength={150}
-                placeholder="לדוגמה: נסיעת בוקר לעבודה"
-                value={routeForm.title}
-                onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-category">סוג מסלול</label>
-              <select
-                id="route-category"
-                className="form-input"
-                value={routeForm.category}
-                onChange={(event) => setRouteForm({ ...routeForm, category: event.target.value })}
-              >
-                {['Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass', 'Night Drive'].map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-difficulty">רמת קושי</label>
-              <select
-                id="route-difficulty"
-                className="form-input"
-                value={routeForm.difficulty}
-                onChange={(event) => setRouteForm({ ...routeForm, difficulty: event.target.value })}
-              >
-                {['Easy', 'Normal', 'Challenging', 'Extreme'].map((difficulty) => (
-                  <option key={difficulty} value={difficulty}>{difficulty}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="route-tags">תגיות והקשר</label>
-              <input
-                id="route-tags"
-                className="form-input"
-                maxLength={300}
-                placeholder="בוקר, עירוני, עבודה"
-                value={routeForm.tags}
-                onChange={(event) => setRouteForm({ ...routeForm, tags: event.target.value })}
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="route-description">תיאור</label>
-            <textarea
-              id="route-description"
+          <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+            <label className="form-label" htmlFor="route-title">שם המסלול</label>
+            <input
+              id="route-title"
               className="form-input"
               required
-              maxLength={2000}
-              rows={3}
-              placeholder="תארו את היעד, תנאי הדרך, מזג האוויר או הקשר חשוב לניטור..."
-              value={routeForm.description}
-              onChange={(event) => setRouteForm({ ...routeForm, description: event.target.value })}
+              minLength={2}
+              maxLength={150}
+              placeholder="לדוגמה: נסיעה לעבודה"
+              value={routeForm.title}
+              onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
             />
           </div>
+          <details style={{ marginBottom: '1rem' }}>
+            <summary style={{ cursor: 'pointer', color: 'var(--accent-primary)', fontWeight: 700 }}>
+              פרטים נוספים (לא חובה)
+            </summary>
+            <div style={{ paddingTop: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="route-category">סוג מסלול</label>
+                  <select
+                    id="route-category"
+                    className="form-input"
+                    value={routeForm.category}
+                    onChange={(event) => setRouteForm({ ...routeForm, category: event.target.value })}
+                  >
+                    {['Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass', 'Night Drive'].map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="route-difficulty">רמת קושי</label>
+                  <select
+                    id="route-difficulty"
+                    className="form-input"
+                    value={routeForm.difficulty}
+                    onChange={(event) => setRouteForm({ ...routeForm, difficulty: event.target.value })}
+                  >
+                    {['Easy', 'Normal', 'Challenging', 'Extreme'].map((difficulty) => (
+                      <option key={difficulty} value={difficulty}>{difficulty}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="route-tags">תגיות</label>
+                  <input
+                    id="route-tags"
+                    className="form-input"
+                    maxLength={300}
+                    placeholder="בוקר, עירוני"
+                    value={routeForm.tags}
+                    onChange={(event) => setRouteForm({ ...routeForm, tags: event.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" htmlFor="route-description">תיאור</label>
+                <textarea
+                  id="route-description"
+                  className="form-input"
+                  maxLength={2000}
+                  rows={2}
+                  placeholder="הוסיפו מידע שיעזור לזהות את המסלול"
+                  value={routeForm.description}
+                  onChange={(event) => setRouteForm({ ...routeForm, description: event.target.value })}
+                />
+              </div>
+            </div>
+          </details>
           <button type="submit" className="btn-primary" disabled={savingRoute}>
             <Plus size={17} />
-              <span>{savingRoute ? 'שומר...' : 'שמירת נסיעה'}</span>
+              <span>{savingRoute ? 'שומר...' : 'שמירת מסלול'}</span>
           </button>
         </form>
       )}
@@ -425,16 +429,22 @@ export const Dashboard = () => {
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.6rem' }}>
                   {item.title}
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteRoute(item)}
-                  className="btn-secondary"
-                  style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
-                  aria-label={`מחיקת ${item.title}`}
-                >
-                  <Trash2 size={15} />
-                  <span>מחיקה מהספרייה</span>
-                </button>
+                {item.is_default ? (
+                  <span style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 700 }}>
+                    מסלול מוכן לכולם
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteRoute(item)}
+                    className="btn-secondary"
+                    style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
+                    aria-label={`מחיקת ${item.title}`}
+                  >
+                    <Trash2 size={15} />
+                    <span>מחיקה מהספרייה</span>
+                  </button>
+                )}
                 <p
                   style={{
                     color: 'var(--text-secondary)',

@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 const MAX_CHART_BARS = 60;
 
 const normalizeScore = (score) => (score > 1 ? score / 100 : score);

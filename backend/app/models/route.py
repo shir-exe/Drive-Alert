@@ -8,7 +8,7 @@ from pydantic import field_validator
 
 class RouteBase(BaseModel):
     title: str = Field(..., min_length=2, max_length=150, description="Name of the driving route")
-    description: str = Field(..., min_length=1, max_length=2000, description="Details and driving conditions")
+    description: str = Field(default="", max_length=2000, description="Optional details and driving conditions")
     video_url: str = Field(default="", max_length=2048, description="Deprecated; real trips do not use a video")
     duration_seconds: int = Field(default=0, ge=0, description="Deprecated; real trips use elapsed drive time")
     category: str = Field(default="Highway", description="Highway, Urban, Mountain, Night Drive")
@@ -33,6 +33,7 @@ class RouteCreate(RouteBase):
 
 class RouteResponse(RouteBase):
     id: str
+    is_default: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
