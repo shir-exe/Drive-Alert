@@ -21,7 +21,11 @@ export const Login = () => {
       await login({ username_or_email: usernameOrEmail, password });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'שגיאה בהתחברות. אנא בדקי/בדוק את הפרטים.');
+      if (!err.response) {
+        setError('השרת אינו זמין כרגע. יש להפעיל את שירות DriveAlert ולנסות שוב.');
+      } else {
+        setError(err.response.data?.detail || 'שם המשתמש או הסיסמה אינם נכונים.');
+      }
     } finally {
       setLoading(false);
     }
@@ -29,6 +33,7 @@ export const Login = () => {
 
   return (
     <div
+      className="auth-page login-page"
       style={{
         minHeight: '100vh',
         display: 'flex',

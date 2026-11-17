@@ -23,6 +23,7 @@ export const Dashboard = () => {
     description: '',
     category: 'Highway',
     difficulty: 'Normal',
+    tags: '',
   });
 
   useEffect(() => {
@@ -58,6 +59,10 @@ export const Dashboard = () => {
     try {
       const created = await contentService.create({
         ...routeForm,
+        tags: routeForm.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
         video_url: '',
         duration_seconds: 0,
       });
@@ -68,6 +73,7 @@ export const Dashboard = () => {
         description: '',
         category: 'Highway',
         difficulty: 'Normal',
+        tags: '',
       });
       setShowCreateForm(false);
     } catch (err) {
@@ -91,10 +97,10 @@ export const Dashboard = () => {
   const categories = ['הכל', 'Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass'];
 
   return (
-    <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <div className="page-shell dashboard-page" style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       {/* Hero / HUD Banner */}
       <div
-        className="glass-panel"
+        className="glass-panel dashboard-hero"
         style={{
           padding: '2.5rem',
           marginBottom: '2.5rem',
@@ -250,11 +256,16 @@ export const Dashboard = () => {
         <form
           onSubmit={handleCreateRoute}
           className="glass-panel"
-          style={{ padding: '1.5rem', marginBottom: '1.5rem' }}
+          style={{ padding: '1.5rem', marginBottom: '1.5rem', direction: 'rtl' }}
         >
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem' }}>
-            הוספת נסיעה אמיתית
-          </h2>
+          <div style={{ marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+              הוספת נסיעה אמיתית
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+              הזינו נתונים שיופיעו בספרייה ובדוח הנסיעה ויעזרו לזהות את ההקשר.
+            </p>
+          </div>
           {formError && (
             <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{formError}</p>
           )}
@@ -267,6 +278,7 @@ export const Dashboard = () => {
                 required
                 minLength={2}
                 maxLength={150}
+                placeholder="לדוגמה: נסיעת בוקר לעבודה"
                 value={routeForm.title}
                 onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
               />
@@ -279,10 +291,36 @@ export const Dashboard = () => {
                 value={routeForm.category}
                 onChange={(event) => setRouteForm({ ...routeForm, category: event.target.value })}
               >
-                {['Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass'].map((category) => (
+                {['Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass', 'Night Drive'].map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-difficulty">רמת קושי</label>
+              <select
+                id="route-difficulty"
+                className="form-input"
+                value={routeForm.difficulty}
+                onChange={(event) => setRouteForm({ ...routeForm, difficulty: event.target.value })}
+              >
+                {['Easy', 'Normal', 'Challenging', 'Extreme'].map((difficulty) => (
+                  <option key={difficulty} value={difficulty}>{difficulty}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-tags">תגיות והקשר</label>
+              <input
+                id="route-tags"
+                className="form-input"
+                maxLength={300}
+                placeholder="בוקר, עירוני, עבודה"
+                value={routeForm.tags}
+                onChange={(event) => setRouteForm({ ...routeForm, tags: event.target.value })}
+              />
             </div>
           </div>
           <div className="form-group">
@@ -293,6 +331,7 @@ export const Dashboard = () => {
               required
               maxLength={2000}
               rows={3}
+              placeholder="תארו את היעד, תנאי הדרך, מזג האוויר או הקשר חשוב לניטור..."
               value={routeForm.description}
               onChange={(event) => setRouteForm({ ...routeForm, description: event.target.value })}
             />
@@ -322,6 +361,7 @@ export const Dashboard = () => {
         </div>
       ) : (
         <div
+          className="route-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
@@ -340,7 +380,7 @@ export const Dashboard = () => {
               }}
             >
               {/* Thumbnail / Header */}
-              <div style={{ position: 'relative', height: '200px', background: '#0b1120' }}>
+              <div className="route-thumbnail" style={{ position: 'relative', height: '200px', background: '#0b1120' }}>
                 <img
                   src={
                     item.thumbnail_url ||

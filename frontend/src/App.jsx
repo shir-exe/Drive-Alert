@@ -36,9 +36,9 @@ export const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="app-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <Navbar />
-          <main style={{ flex: 1 }}>
+          <main className="app-main" style={{ flex: 1, minHeight: 0 }}>
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />

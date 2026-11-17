@@ -47,6 +47,8 @@ export const DriveView = () => {
   const gpsWatchRef = useRef(null);
   const currentSpeedRef = useRef(0);
   const driveReadingsRef = useRef([]);
+  const initializedRouteRef = useRef('');
+  const telemetrySyncRef = useRef(false);
 
   // Driver monitoring uses MediaPipe eye-blink blendshapes and a PERCLOS alertness proxy.
   const {
@@ -73,6 +75,10 @@ export const DriveView = () => {
 
   // Initialize Route & Backend Drive Session
   useEffect(() => {
+    const initializationKey = `${routeId}:${profileId}`;
+    if (initializedRouteRef.current === initializationKey) return undefined;
+    initializedRouteRef.current = initializationKey;
+
     const initDrive = async () => {
       try {
         setLoading(true);
@@ -95,11 +101,9 @@ export const DriveView = () => {
     };
 
     initDrive();
+  }, [routeId, profileId]);
 
-    return () => {
-      stopCamera();
-    };
-  }, [routeId, profileId, stopCamera]);
+  useEffect(() => () => stopCamera(), [stopCamera]);
 
   // Real GPS speed, position and distance tracking.
   useEffect(() => {
@@ -156,12 +160,14 @@ export const DriveView = () => {
     if (!activeSession) return;
 
     const interval = setInterval(async () => {
+      if (telemetrySyncRef.current) return;
       const currentSec = tripStartedRef.current
         ? Math.floor((Date.now() - tripStartedRef.current) / 1000)
         : 0;
       setVideoElapsedSec(currentSec);
       if (currentSec === lastSampledSecondRef.current) return;
       lastSampledSecondRef.current = currentSec;
+      telemetrySyncRef.current = true;
 
       const { attentionScore: score, faceDetected: detectedFace, gazeState: gaze, isDrowsy: drowsy } = metricsRef.current;
       const normalizedScore = Number.isFinite(score) ? Number(score.toFixed(2)) : null;
@@ -203,6 +209,8 @@ export const DriveView = () => {
       } catch (error) {
         console.error('Failed to sync live telemetry:', error);
         setTelemetryError('הדגימות נשמרות זמנית במכשיר, אך הסנכרון לשרת נכשל. הן יישלחו שוב עם שמירת הנסיעה.');
+      } finally {
+        telemetrySyncRef.current = false;
       }
     }, 1000);
 
@@ -269,7 +277,7 @@ export const DriveView = () => {
   }
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.25rem' }}>
+    <div className="page-shell drive-page" style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.25rem' }}>
       {/* Top Header Bar */}
       <div
         style={{

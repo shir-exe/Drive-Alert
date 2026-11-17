@@ -146,7 +146,7 @@ export const Session = () => {
   }
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem' }}>
+    <div className="page-shell session-page" style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem' }}>
       {/* Top Header */}
       <div style={{
         display: 'flex',

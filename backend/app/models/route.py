@@ -19,6 +19,8 @@ class RouteBase(BaseModel):
     @field_validator("video_url")
     @classmethod
     def validate_video_url(cls, value: str) -> str:
+        if value == "":
+            return value
         parsed = urlsplit(value)
         if parsed.scheme != "https" or not parsed.hostname:
             raise ValueError("Video URL must be a valid HTTPS URL")

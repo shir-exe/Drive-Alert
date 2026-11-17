@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 6;
 const MAX_CHART_BARS = 60;
 
 const normalizeScore = (score) => (score > 1 ? score / 100 : score);
@@ -121,7 +121,7 @@ export const History = () => {
   const measuredReadings = selectedReadings.filter((reading) => Number.isFinite(reading.score)).length;
 
   return (
-    <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '2.25rem 1.5rem' }}>
+    <div className="page-shell history-page" style={{ maxWidth: '1360px', margin: '0 auto', padding: '2.25rem 1.5rem' }}>
       <header style={{ marginBottom: '1.75rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: 'var(--accent-primary)', fontWeight: 800, fontSize: '0.82rem', marginBottom: '0.45rem' }}>
           <HistoryIcon size={16} />

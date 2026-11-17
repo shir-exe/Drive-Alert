@@ -29,7 +29,11 @@ export const Register = () => {
       await authService.register(formData);
       navigate('/login', { state: { registered: true } });
     } catch (err) {
-      setError(err.response?.data?.detail || 'שגיאה ביצירת החשבון. אנא בדקי/בדוק את הנתונים.');
+      if (!err.response) {
+        setError('השרת אינו זמין כרגע. יש להפעיל את שירות DriveAlert ולנסות שוב.');
+      } else {
+        setError(err.response.data?.detail || 'לא ניתן ליצור את החשבון. בדקו את הפרטים ונסו שוב.');
+      }
     } finally {
       setLoading(false);
     }
@@ -37,6 +41,7 @@ export const Register = () => {
 
   return (
     <div
+      className="auth-page register-page"
       style={{
         minHeight: '100vh',
         display: 'flex',
