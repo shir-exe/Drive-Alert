@@ -44,7 +44,7 @@ class DriveSessionUpdate(BaseModel):
     samples: Optional[List[DriveReading]] = None
     average_score: Optional[float] = None
     duration_watched_sec: Optional[float] = None
-    is_completed: Optional[bool] = False
+    is_completed: Optional[bool] = None
 
 
 SessionUpdate = DriveSessionUpdate

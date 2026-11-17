@@ -11,7 +11,8 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6, description="Plain text password")
+    full_name: str = Field(..., min_length=1, max_length=100)
+    password: str = Field(..., min_length=8, description="Plain text password")
 
 
 class UserLogin(BaseModel):

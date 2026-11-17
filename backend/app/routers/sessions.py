@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.db.database import get_database
 from app.core.deps import get_current_user
 from app.models.user import UserResponse
@@ -22,16 +23,21 @@ async def start_session(
     db=Depends(get_database)
 ):
     """Open a new driving session strictly tied to current authenticated driver."""
-    cid = session_data.content_id or session_data.route_id or "default"
-    content_title = session_data.content_title or session_data.route_title or "מסלול נהיגה פעיל"
-
-    # Lookup content title from database if content_id is a valid ObjectId
+    cid = session_data.content_id or session_data.route_id
+    if not cid:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Content ID is required")
     try:
-        content_doc = await db["content"].find_one({"_id": ObjectId(cid)})
-        if content_doc:
-            content_title = content_doc.get("title", content_title)
-    except Exception:
-        pass
+        content_oid = ObjectId(cid)
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
+
+    content_doc = await db["content"].find_one({
+        "_id": content_oid,
+        "owner_id": current_user.id
+    })
+    if content_doc is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
+    content_title = content_doc["title"]
 
     session_doc = {
         "user_id": current_user.id,
@@ -75,13 +81,15 @@ async def append_readings(
     """Receive live driver alertness readings with score and position."""
     try:
         oid = ObjectId(session_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid session ID")
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Drive session not found")
 
     # Strict user separation check
     session_doc = await db["sessions"].find_one({"_id": oid, "user_id": current_user.id})
     if not session_doc:
         raise HTTPException(status_code=404, detail="Drive session not found or unauthorized")
+    if session_doc.get("end_time") is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Drive session is already closed")
 
     items = [readings] if isinstance(readings, DriveReading) else readings
     serialized = [r.model_dump() for r in items]
@@ -104,8 +112,8 @@ async def update_or_finish_session(
     """Update or finalize driving session, calculating average alertness score."""
     try:
         oid = ObjectId(session_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid session ID")
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Drive session not found")
 
     # Enforce strict user separation
     session_doc = await db["sessions"].find_one({"_id": oid, "user_id": current_user.id})
@@ -117,8 +125,7 @@ async def update_or_finish_session(
         update_fields["duration_watched_sec"] = update_data.duration_watched_sec
     if update_data.is_completed is not None:
         update_fields["is_completed"] = update_data.is_completed
-        if update_data.is_completed:
-            update_fields["end_time"] = datetime.utcnow()
+        update_fields["end_time"] = datetime.utcnow()
 
     # Collect incoming readings / samples
     incoming_readings = update_data.readings or update_data.samples

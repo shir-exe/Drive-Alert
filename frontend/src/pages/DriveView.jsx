@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { contentService, sessionService } from '../services/api';
 import { useDriverMonitor } from '../hooks/useDriverMonitor';
+import { getProfileById } from '../utils/attentionProfiles';
 import { AlertBanner } from '../components/AlertBanner';
 import { GaugeMeter } from '../components/GaugeMeter';
 import {
@@ -22,7 +23,7 @@ export const DriveView = () => {
   const { id: routeId } = useParams();
   const [searchParams] = useSearchParams();
   const profileId = searchParams.get('profile') || 'standard';
-  const alertThreshold = 0.4;
+  const alertThreshold = getProfileById(profileId).threshold / 100;
   const navigate = useNavigate();
 
   const [route, setRoute] = useState(null);
@@ -52,7 +53,7 @@ export const DriveView = () => {
     requestCameraAccess,
     stopCamera,
     toggleMute,
-  } = useDriverMonitor();
+  } = useDriverMonitor(alertThreshold);
 
   // Initialize Route & Backend Drive Session
   useEffect(() => {

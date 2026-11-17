@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { contentService, userService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Play, Clock, Compass, Filter, ShieldCheck, Car } from 'lucide-react';
+import { Play, Clock, Compass, Filter, ShieldCheck, Car, Plus, Trash2 } from 'lucide-react';
 import { ATTENTION_PROFILES } from '../utils/attentionProfiles';
 
 export const Dashboard = () => {
@@ -10,14 +10,28 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const [routesList, setRoutesList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedProfile, setSelectedProfile] = useState(user?.preferred_profile || 'standard');
   const [stats, setStats] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [savingRoute, setSavingRoute] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [routeForm, setRouteForm] = useState({
+    title: '',
+    description: '',
+    video_url: '',
+    duration_seconds: '180',
+    category: 'Highway',
+    difficulty: 'Normal',
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setLoadError('');
         const [routesData, statsData] = await Promise.all([
           contentService.getAll(selectedCategory),
           userService.getStats(),
@@ -26,6 +40,7 @@ export const Dashboard = () => {
         setStats(statsData);
       } catch (err) {
         console.error('Error fetching driving routes:', err);
+        setLoadError(err.response?.data?.detail || 'לא ניתן לטעון את הספרייה כרגע. נסו לרענן את העמוד.');
       } finally {
         setLoading(false);
       }
@@ -36,6 +51,44 @@ export const Dashboard = () => {
 
   const handleStartDrive = (routeId) => {
     navigate(`/drive/${routeId}?profile=${selectedProfile}`);
+  };
+
+  const handleCreateRoute = async (event) => {
+    event.preventDefault();
+    setFormError('');
+    setSavingRoute(true);
+    try {
+      const created = await contentService.create({
+        ...routeForm,
+        duration_seconds: Number(routeForm.duration_seconds),
+      });
+      setRoutesList((current) => [created, ...current]);
+      setSelectedCategory('');
+      setRouteForm({
+        title: '',
+        description: '',
+        video_url: '',
+        duration_seconds: '180',
+        category: 'Highway',
+        difficulty: 'Normal',
+      });
+      setShowCreateForm(false);
+    } catch (err) {
+      setFormError(err.response?.data?.detail || 'לא ניתן להוסיף את הסרטון. בדקו את הפרטים ונסו שוב.');
+    } finally {
+      setSavingRoute(false);
+    }
+  };
+
+  const handleDeleteRoute = async (route) => {
+    if (!window.confirm(`למחוק את "${route.title}" מהספרייה שלך?`)) return;
+    setActionError('');
+    try {
+      await contentService.deleteById(route.id);
+      setRoutesList((current) => current.filter((item) => item.id !== route.id));
+    } catch (err) {
+      setActionError(err.response?.data?.detail || 'לא ניתן למחוק את הסרטון. נסו שוב.');
+    }
   };
 
   const categories = ['הכל', 'Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass'];
@@ -179,6 +232,109 @@ export const Dashboard = () => {
         </div>
       </div>
 
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <button
+          type="button"
+          onClick={() => {
+            setShowCreateForm((shown) => !shown);
+            setFormError('');
+          }}
+          className="btn-primary"
+        >
+          <Plus size={18} />
+          <span>{showCreateForm ? 'סגירת טופס' : 'הוספת סרטון לספרייה'}</span>
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <form
+          onSubmit={handleCreateRoute}
+          className="glass-panel"
+          style={{ padding: '1.5rem', marginBottom: '1.5rem' }}
+        >
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem' }}>
+            הוספת סרטון נהיגה
+          </h2>
+          {formError && (
+            <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{formError}</p>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-title">כותרת</label>
+              <input
+                id="route-title"
+                className="form-input"
+                required
+                minLength={2}
+                maxLength={150}
+                value={routeForm.title}
+                onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-video-url">קישור ישיר לסרטון (HTTPS)</label>
+              <input
+                id="route-video-url"
+                className="form-input"
+                type="url"
+                required
+                placeholder="https://example.com/drive.mp4"
+                value={routeForm.video_url}
+                onChange={(event) => setRouteForm({ ...routeForm, video_url: event.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-duration">משך הסרטון בשניות</label>
+              <input
+                id="route-duration"
+                className="form-input"
+                type="number"
+                min="1"
+                required
+                value={routeForm.duration_seconds}
+                onChange={(event) => setRouteForm({ ...routeForm, duration_seconds: event.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="route-category">סוג מסלול</label>
+              <select
+                id="route-category"
+                className="form-input"
+                value={routeForm.category}
+                onChange={(event) => setRouteForm({ ...routeForm, category: event.target.value })}
+              >
+                {['Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass'].map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="route-description">תיאור</label>
+            <textarea
+              id="route-description"
+              className="form-input"
+              required
+              maxLength={2000}
+              rows={3}
+              value={routeForm.description}
+              onChange={(event) => setRouteForm({ ...routeForm, description: event.target.value })}
+            />
+          </div>
+          <button type="submit" className="btn-primary" disabled={savingRoute}>
+            <Plus size={17} />
+            <span>{savingRoute ? 'שומר...' : 'שמירת הסרטון'}</span>
+          </button>
+        </form>
+      )}
+
+      {actionError && (
+        <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{actionError}</p>
+      )}
+      {loadError && (
+        <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{loadError}</p>
+      )}
+
       {/* Routes Grid */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
@@ -186,7 +342,7 @@ export const Dashboard = () => {
         </div>
       ) : routesList.length === 0 ? (
         <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>לא נמצאו מסלולים בקטגוריה זו.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>הספרייה שלך עדיין ריקה. הוסיפו סרטון כדי להתחיל.</p>
         </div>
       ) : (
         <div
@@ -253,6 +409,16 @@ export const Dashboard = () => {
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.6rem' }}>
                   {item.title}
                 </h3>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRoute(item)}
+                  className="btn-secondary"
+                  style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
+                  aria-label={`מחיקת ${item.title}`}
+                >
+                  <Trash2 size={15} />
+                  <span>מחיקה מהספרייה</span>
+                </button>
                 <p
                   style={{
                     color: 'var(--text-secondary)',

@@ -1,127 +1,148 @@
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 from bson import ObjectId
+from bson.errors import InvalidId
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Query
+from pymongo.errors import DuplicateKeyError
 from app.db.database import get_database
+from app.core.deps import get_current_user
+from app.models.user import UserResponse
 from app.models.route import RouteCreate, RouteResponse
 
 router = APIRouter(prefix="/content", tags=["Content & Driving Routes"])
 
-# Pre-seeded realistic driving video routes
-DEFAULT_DRIVING_ROUTES = [
-    {
-        "title": "כביש 6 – נסיעת לילה בין-עירונית",
-        "description": "נסיעה מהירה בכביש מהיר בשעות החשכה. דורשת רמת ערנות גבוהה ומיקוד מתמשך למניעת עייפות והירדמות על ההגה.",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "duration_seconds": 180,
-        "category": "Highway",
-        "difficulty": "Challenging",
-        "thumbnail_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
-        "tags": ["כביש מהיר", "לילה", "מניעת הירדמות"],
-        "created_at": datetime.utcnow()
-    },
-    {
-        "title": "כביש 90 – נסיעה מונוטונית בערבה וים המלח",
-        "description": "כביש ארוך וישר ברובו המועד להסחות דעת וירידה איטית ברמת הדריכות. מושלם לכיול והדגמת זיהוי עייפות ורפיון עפעפיים.",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        "duration_seconds": 596,
-        "category": "Desert Cruise",
-        "difficulty": "Extreme",
-        "thumbnail_url": "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80",
-        "tags": ["ים המלח", "מונוטוני", "בדיקת ערנות"],
-        "created_at": datetime.utcnow()
-    },
-    {
-        "title": "נתיבי איילון – תנועה עירונית צפופה",
-        "description": "עומס תנועה, בלימות פתאומיות והשתלבויות מהירות. מבחן מעולה לתגובתיות ושמירה על קשר עין רציף עם הדרך.",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        "duration_seconds": 653,
-        "category": "Urban Traffic",
-        "difficulty": "Normal",
-        "thumbnail_url": "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=800&q=80",
-        "tags": ["עירוני", "עומס תנועה", "תגובתיות"],
-        "created_at": datetime.utcnow()
-    },
-    {
-        "title": "מעבר הרים מפותל – ירידות סדום וערד",
-        "description": "פיתולים חדים, שינויי גובה ותנאי ראות משתנים הדורשים ריכוז מלא ותנועות מבט חדות לכל כיווני התנועה.",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        "duration_seconds": 120,
-        "category": "Mountain Pass",
-        "difficulty": "Challenging",
-        "thumbnail_url": "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80",
-        "tags": ["הרים", "עיקולים", "דריכות שיא"],
-        "created_at": datetime.utcnow()
-    }
-]
+
+async def migrate_legacy_content(user_id: str, db) -> None:
+    user_oid = ObjectId(user_id)
+    user_doc = await db["users"].find_one(
+        {"_id": user_oid},
+        {"legacy_content_migrated": 1}
+    )
+    if user_doc is None or user_doc.get("legacy_content_migrated", False):
+        return
+
+    legacy_items = await db["content"].find({
+        "owner_id": {"$exists": False},
+        "legacy_content_id": {"$exists": False}
+    }).to_list(length=None)
+
+    for item in legacy_items:
+        legacy_id = str(item["_id"])
+        existing_copy = await db["content"].find_one({
+            "owner_id": user_id,
+            "legacy_content_id": legacy_id
+        })
+        if existing_copy is None:
+            copied_item = {
+                key: value
+                for key, value in item.items()
+                if key != "_id"
+            }
+            copied_item["owner_id"] = user_id
+            copied_item["legacy_content_id"] = legacy_id
+            try:
+                result = await db["content"].insert_one(copied_item)
+                copied_id = result.inserted_id
+            except DuplicateKeyError:
+                existing_copy = await db["content"].find_one({
+                    "owner_id": user_id,
+                    "legacy_content_id": legacy_id
+                })
+                if existing_copy is None:
+                    raise
+                copied_id = existing_copy["_id"]
+        else:
+            copied_id = existing_copy["_id"]
+
+        await db["sessions"].update_many(
+            {"user_id": user_id, "content_id": legacy_id},
+            {"$set": {"content_id": str(copied_id)}}
+        )
+
+    await db["users"].update_one(
+        {"_id": user_oid, "legacy_content_migrated": {"$ne": True}},
+        {"$set": {"legacy_content_migrated": True}}
+    )
+
+
+def to_route_response(item: dict) -> RouteResponse:
+    return RouteResponse(
+        id=str(item["_id"]),
+        title=item["title"],
+        description=item["description"],
+        video_url=item["video_url"],
+        duration_seconds=item["duration_seconds"],
+        category=item.get("category", "Highway"),
+        difficulty=item.get("difficulty", "Normal"),
+        thumbnail_url=item.get("thumbnail_url"),
+        tags=item.get("tags", []),
+        created_at=item.get("created_at", datetime.utcnow())
+    )
 
 
 @router.get("", response_model=List[RouteResponse])
 async def list_routes(
     category: Optional[str] = Query(None),
+    current_user: UserResponse = Depends(get_current_user),
     db=Depends(get_database)
 ):
-    """Retrieve driving routes with optional category filtering."""
-    query = {}
+    """Retrieve only the authenticated user's driving routes."""
+    await migrate_legacy_content(current_user.id, db)
+    query = {"owner_id": current_user.id}
     if category and category != "הכל":
         query["category"] = category
 
     cursor = db["content"].find(query)
     items = await cursor.to_list(length=100)
-
-    # Seed initial default routes if collection is empty
-    if not items and not category:
-        await db["content"].insert_many(DEFAULT_DRIVING_ROUTES)
-        cursor = db["content"].find(query)
-        items = await cursor.to_list(length=100)
-
-    return [
-        RouteResponse(
-            id=str(item["_id"]),
-            title=item["title"],
-            description=item["description"],
-            video_url=item["video_url"],
-            duration_seconds=item["duration_seconds"],
-            category=item.get("category", "Highway"),
-            difficulty=item.get("difficulty", "Normal"),
-            thumbnail_url=item.get("thumbnail_url"),
-            tags=item.get("tags", []),
-            created_at=item.get("created_at", datetime.utcnow())
-        )
-        for item in items
-    ]
+    return [to_route_response(item) for item in items]
 
 
 @router.get("/{content_id}", response_model=RouteResponse)
-async def get_route(content_id: str, db=Depends(get_database)):
-    """Retrieve a single driving route by ID."""
+async def get_route(
+    content_id: str,
+    current_user: UserResponse = Depends(get_current_user),
+    db=Depends(get_database)
+):
+    """Retrieve a driving route only if it belongs to the authenticated user."""
     try:
-        doc = await db["content"].find_one({"_id": ObjectId(content_id)})
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid route ID format")
+        oid = ObjectId(content_id)
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
 
-    if not doc:
-        raise HTTPException(status_code=404, detail="Driving route not found")
+    doc = await db["content"].find_one({"_id": oid, "owner_id": current_user.id})
+    if doc is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
 
-    return RouteResponse(
-        id=str(doc["_id"]),
-        title=doc["title"],
-        description=doc["description"],
-        video_url=doc["video_url"],
-        duration_seconds=doc["duration_seconds"],
-        category=doc.get("category", "Highway"),
-        difficulty=doc.get("difficulty", "Normal"),
-        thumbnail_url=doc.get("thumbnail_url"),
-        tags=doc.get("tags", []),
-        created_at=doc.get("created_at", datetime.utcnow())
-    )
+    return to_route_response(doc)
 
 
 @router.post("", response_model=RouteResponse, status_code=status.HTTP_201_CREATED)
-async def create_route(route_in: RouteCreate, db=Depends(get_database)):
-    """Add a new driving video route."""
+async def create_route(
+    route_in: RouteCreate,
+    current_user: UserResponse = Depends(get_current_user),
+    db=Depends(get_database)
+):
+    """Add a driving video route to the authenticated user's library."""
     doc = route_in.model_dump()
     doc["created_at"] = datetime.utcnow()
+    doc["owner_id"] = current_user.id
     result = await db["content"].insert_one(doc)
-    doc["id"] = str(result.inserted_id)
-    return RouteResponse(**doc)
+    doc["_id"] = result.inserted_id
+    return to_route_response(doc)
+
+
+@router.delete("/{content_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_route(
+    content_id: str,
+    current_user: UserResponse = Depends(get_current_user),
+    db=Depends(get_database)
+):
+    try:
+        oid = ObjectId(content_id)
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
+
+    result = await db["content"].delete_one({"_id": oid, "owner_id": current_user.id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Driving route not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

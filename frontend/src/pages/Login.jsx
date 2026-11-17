@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldAlert, Lock, User, ArrowRight, AlertCircle } from 'lucide-react';
 
@@ -9,6 +9,7 @@ export const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -68,6 +69,23 @@ export const Login = () => {
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
           מערכת חכמה לניטור ערנות נהגים ומניעת הסחת דעת בזמן אמת
         </p>
+
+        {location.state?.registered && (
+          <div
+            role="status"
+            style={{
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              color: '#087443',
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.85rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            החשבון נוצר בהצלחה. אפשר להתחבר עכשיו.
+          </div>
+        )}
 
         {error && (
           <div

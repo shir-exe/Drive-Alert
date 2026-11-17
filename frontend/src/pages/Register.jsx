@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/api';
 import { ShieldAlert, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ATTENTION_PROFILES } from '../utils/attentionProfiles';
 
@@ -14,7 +14,6 @@ export const Register = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -27,8 +26,8 @@ export const Register = () => {
     setLoading(true);
 
     try {
-      await register(formData);
-      navigate('/dashboard');
+      await authService.register(formData);
+      navigate('/login', { state: { registered: true } });
     } catch (err) {
       setError(err.response?.data?.detail || 'שגיאה ביצירת החשבון. אנא בדקי/בדוק את הנתונים.');
     } finally {
@@ -105,6 +104,7 @@ export const Register = () => {
             <input
               type="text"
               name="full_name"
+              required
               className="form-input"
               placeholder="ישראל ישראלי"
               value={formData.full_name}
@@ -140,12 +140,12 @@ export const Register = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">סיסמה (לפחות 6 תווים) *</label>
+            <label className="form-label">סיסמה (לפחות 8 תווים) *</label>
             <input
               type="password"
               required
               name="password"
-              minLength={6}
+              minLength={8}
               className="form-input"
               placeholder="••••••••"
               value={formData.password}

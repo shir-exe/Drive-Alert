@@ -5,6 +5,8 @@ steps:
       - 'build'
       - '-t'
       - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:$COMMIT_SHA'
+      - '-t'
+      - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:latest'
       - '-f'
       - 'frontend/Dockerfile'
       - 'frontend/'
@@ -33,3 +35,4 @@ steps:
 
 images:
   - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:$COMMIT_SHA'
+  - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-frontend:latest'

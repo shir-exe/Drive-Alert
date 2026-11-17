@@ -5,6 +5,8 @@ steps:
       - 'build'
       - '-t'
       - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-backend:$COMMIT_SHA'
+      - '-t'
+      - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-backend:latest'
       - '-f'
       - 'backend/Dockerfile'
       - 'backend/'
@@ -15,7 +17,6 @@ steps:
     args:
       - 'push'
       - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-backend:$COMMIT_SHA'
-
 
   # 3. פריסה אוטומטית ל-Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -34,3 +35,4 @@ steps:
 
 images:
   - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-backend:$COMMIT_SHA'
+  - 'europe-north1-docker.pkg.dev/$PROJECT_ID/drivealert-eu/drivealert-backend:latest'

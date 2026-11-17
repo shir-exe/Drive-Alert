@@ -78,9 +78,16 @@ export const contentService = {
     const res = await api.get(url);
     return res.data;
   },
+  create: async (content) => {
+    const res = await api.post('/content', content);
+    return res.data;
+  },
   getById: async (id) => {
     const res = await api.get(`/content/${id}`);
     return res.data;
+  },
+  deleteById: async (id) => {
+    await api.delete(`/content/${id}`);
   },
 };
 

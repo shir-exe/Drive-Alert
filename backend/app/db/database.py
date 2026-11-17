@@ -29,6 +29,11 @@ async def connect_to_mongo():
         await db_manager.db["users"].create_index("username", unique=True)
         await db_manager.db["sessions"].create_index("user_id")
         await db_manager.db["content"].create_index("title")
+        await db_manager.db["content"].create_index(
+            [("owner_id", 1), ("legacy_content_id", 1)],
+            unique=True,
+            partialFilterExpression={"legacy_content_id": {"$exists": True}}
+        )
         logger.info("MongoDB connected and indexes verified successfully.")
     except Exception as e:
         logger.warning("MongoDB index initialization note: %s", e)
