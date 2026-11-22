@@ -1,0 +1,106 @@
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.history-row {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.telemetry-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 190px;
+  padding: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(to top, transparent calc(25% - 1px), #e9edf4 25%, transparent calc(25% + 1px)),
+    linear-gradient(to top, transparent calc(50% - 1px), #e9edf4 50%, transparent calc(50% + 1px)),
+    linear-gradient(to top, transparent calc(75% - 1px), #e9edf4 75%, transparent calc(75% + 1px)),
+    #fbfcff;
+}
+
+.telemetry-bar {
+  min-width: 3px;
+  flex: 1 1 0;
+  border-radius: 4px 4px 1px 1px;
+  transition: height 0.2s ease;
+}
+
+.telemetry-empty {
+  min-height: 170px;
+  padding: 2rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--text-secondary);
+  background: #f8f9fc;
+  border: 1px dashed #d8deea;
+  border-radius: var(--radius-sm);
+}
+
+.page-error {
+  padding: 0.9rem 1rem;
+  color: #a82d40;
+  background: #fff1f3;
+  border: 1px solid #f2cbd1;
+  border-radius: var(--radius-sm);
+}
+
+.video-error {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(31, 41, 66, 0.96));
+}
+
+.video-error-content {
+  max-width: 440px;
+}
+
+.video-error h3 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.video-error p {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.video-error code {
+  display: block;
+  margin-top: 0.85rem;
+  color: #a9b5ca;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+

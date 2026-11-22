@@ -18,69 +18,27 @@ export const Navbar = () => {
   const isActive = (path) => location.pathname === path || (path === '/dashboard' && location.pathname === '/library');
 
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: 'var(--bg-glass)',
-        borderBottom: '1px solid var(--border-subtle)',
-        backdropFilter: 'blur(18px)',
-      }}
-    >
-      <div
-        className="navbar-inner"
-        style={{
-          maxWidth: '1440px',
-          minHeight: '76px',
-          margin: '0 auto',
-          padding: '0.75rem 1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
-        }}
-      >
-        <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-          <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '13px',
-              display: 'grid',
-              placeItems: 'center',
-              color: '#fff',
-              background: 'var(--accent-gradient)',
-              boxShadow: 'var(--accent-glow)',
-            }}
-          >
+    <header className="navbar">
+      <div className="navbar-inner">
+        <Link to="/dashboard" className="navbar-brand">
+          <div className="navbar-brand-icon">
             <ShieldAlert size={22} />
           </div>
           <div>
-            <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              Drive<span style={{ color: 'var(--accent-primary)' }}>Alert</span>
+            <span className="navbar-brand-name">
+              Drive<span>Alert</span>
             </span>
-            <span style={{ display: 'block', marginTop: '0.2rem', color: 'var(--text-muted)', fontSize: '0.68rem', lineHeight: 1 }}>
+            <span className="navbar-brand-tagline">
               ניטור ערנות נהגים
             </span>
           </div>
         </Link>
 
-        <nav className="navbar-nav" aria-label="ניווט ראשי" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <nav className="navbar-nav" aria-label="ניווט ראשי">
           <Link
             to="/dashboard"
             aria-current={isActive('/dashboard') ? 'page' : undefined}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              padding: '0.58rem 0.9rem',
-              borderRadius: '11px',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              color: isActive('/dashboard') ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              background: isActive('/dashboard') ? '#f0efff' : 'transparent',
-            }}
+            className={`navbar-link ${isActive('/dashboard') ? 'active' : ''}`}
           >
             <Compass size={17} />
             <span>מסלולי נהיגה</span>
@@ -88,37 +46,26 @@ export const Navbar = () => {
           <Link
             to="/history"
             aria-current={isActive('/history') ? 'page' : undefined}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              padding: '0.58rem 0.9rem',
-              borderRadius: '11px',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              color: isActive('/history') ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              background: isActive('/history') ? '#f0efff' : 'transparent',
-            }}
+            className={`navbar-link ${isActive('/history') ? 'active' : ''}`}
           >
             <HistoryIcon size={17} />
             <span>יומן נסיעות</span>
           </Link>
         </nav>
 
-        <div className="navbar-user" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: 'var(--text-secondary)' }}>
+        <div className="navbar-user">
+          <div className="navbar-user-profile">
             <User size={16} color="var(--accent-primary)" />
-            <span className="navbar-user-name" style={{ fontSize: '0.86rem', fontWeight: 700 }}>
+            <span className="navbar-user-name">
               {user?.full_name || user?.username}
             </span>
-            <span className="badge badge-success navbar-user-badge" style={{ fontSize: '0.67rem' }}>
+            <span className="badge badge-success navbar-user-badge">
               מחובר/ת
             </span>
           </div>
           <button
             onClick={handleLogout}
-            className="btn-secondary"
-            style={{ minHeight: '38px', padding: '0.4rem 0.7rem', fontSize: '0.83rem' }}
+            className="btn-secondary navbar-logout"
             title="התנתקות מהמערכת"
           >
             <LogOut size={15} />

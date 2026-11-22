@@ -14,16 +14,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-secondary)',
-          background: 'var(--bg-main)',
-        }}
-      >
+      <div className="app-loading">
         טוען נתוני נהג...
       </div>
     );
@@ -36,9 +27,9 @@ export const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="app-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="app-shell">
           <Navbar />
-          <main className="app-main" style={{ flex: 1, minHeight: 0 }}>
+          <main className="app-main">
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />

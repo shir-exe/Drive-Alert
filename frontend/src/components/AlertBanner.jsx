@@ -24,39 +24,13 @@ export const AlertBanner = ({
   return (
     <div
       role="alert"
+      className={`alert-banner ${isCriticalAlert ? 'critical' : 'warning'}`}
       style={{
-        position: 'relative',
-        width: '100%',
-        padding: '0.85rem 1.25rem',
-        borderRadius: 'var(--radius-md)',
-        background: isCriticalAlert
-          ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%)'
-          : 'linear-gradient(90deg, rgba(245, 158, 11, 0.95) 0%, rgba(217, 119, 6, 0.95) 100%)',
-        color: '#ffffff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '0.75rem',
-        boxShadow: isCriticalAlert
-          ? '0 0 30px rgba(239, 68, 68, 0.65)'
-          : '0 0 25px rgba(245, 158, 11, 0.5)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        animation: 'pulseGlow 1.2s infinite ease-in-out',
-        zIndex: 30,
+        '--alert-animation': 'pulseGlow 1.2s infinite ease-in-out',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-        <div
-          style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            padding: '0.5rem',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+      <div className="alert-banner-message">
+        <div className="alert-banner-icon">
           {isFaceMissing ? (
             <EyeOff size={26} color="#ffffff" />
           ) : (
@@ -65,7 +39,7 @@ export const AlertBanner = ({
         </div>
 
         <div>
-          <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.01em' }}>
+          <div className="alert-banner-title">
             {isFaceMissing
               ? 'אזהרה קריטית: לא זוהו פני נהג!'
               : isDrowsinessAlert
@@ -74,7 +48,7 @@ export const AlertBanner = ({
                 : 'אזהרה: מדד הערנות נמוך!'
               : 'התרעת עייפות / הסחת דעת קריטית! סכנת תאונה!'}
           </div>
-          <div style={{ fontSize: '0.85rem', opacity: 0.95, marginTop: '0.1rem' }}>
+          <div className="alert-banner-description">
             {isFaceMissing
               ? 'המצלמה אינה מזהה פנים, ולכן לא ניתן לחשב את מדד הערנות.'
               : isDrowsinessAlert
@@ -84,24 +58,11 @@ export const AlertBanner = ({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div className="alert-banner-actions">
         {onToggleMute && (
           <button
             onClick={onToggleMute}
-            style={{
-              background: 'rgba(0, 0, 0, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              color: '#ffffff',
-              padding: '0.4rem 0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              transition: 'var(--transition-smooth)',
-            }}
+            className="alert-mute-button"
             title={isMuted ? 'הפעל צפצוף התרעה' : 'השתק צפצוף'}
           >
             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -109,16 +70,7 @@ export const AlertBanner = ({
           </button>
         )}
 
-        <div
-          style={{
-            background: 'rgba(0, 0, 0, 0.3)',
-            padding: '0.35rem 0.75rem',
-            borderRadius: 'var(--radius-sm)',
-            fontFamily: 'var(--font-mono, monospace)',
-            fontWeight: 800,
-            fontSize: '0.95rem',
-          }}
-        >
+        <div className="alert-banner-status">
           {isFaceMissing ? 'NO FACE' : isDrowsinessAlert ? eyesClosed ? 'EYES CLOSED' : 'LOW ALERTNESS' : `ALERT: ${normalizedScore.toFixed(2)}`}
         </div>
       </div>

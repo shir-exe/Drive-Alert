@@ -40,64 +40,23 @@ export const Register = () => {
   };
 
   return (
-    <div
-      className="auth-page register-page"
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2.5rem 1rem',
-      }}
-    >
-      <div
-        className="glass-panel"
-        style={{
-          maxWidth: '520px',
-          width: '100%',
-          padding: '2.5rem 2rem',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div
-            style={{
-              width: '58px',
-              height: '58px',
-              borderRadius: '16px',
-              background: 'var(--accent-gradient)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.25rem',
-              boxShadow: 'var(--accent-glow)',
-            }}
-          >
+    <div className="auth-page register-page">
+      <div className="glass-panel auth-card register-card">
+        <div className="register-header">
+          <div className="auth-brand-icon">
             <ShieldAlert size={34} color="#ffffff" />
           </div>
 
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 900, marginBottom: '0.4rem' }}>
-            הרשמה ל-<span style={{ color: 'var(--accent-primary)' }}>DriveAlert</span>
+          <h1 className="auth-title">
+            הרשמה ל-<span>DriveAlert</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          <p className="register-description">
             הצטרפו למערכת ניטור בטיחות נהיגה ומניעת עייפות והסחת דעת
           </p>
         </div>
 
         {error && (
-          <div
-            style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#b42318',
-              padding: '0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1.25rem',
-            }}
-          >
+          <div className="auth-error">
             <AlertCircle size={18} />
             <span>{error}</span>
           </div>
@@ -117,7 +76,7 @@ export const Register = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="register-grid">
             <div className="form-group">
               <label className="form-label">שם משתמש *</label>
               <input
@@ -159,29 +118,13 @@ export const Register = () => {
           </div>
 
           {/* Attention Profile Selection */}
-          <div className="form-group" style={{ marginTop: '0.5rem' }}>
+          <div className="form-group profile-selection">
             <label className="form-label">פרופיל רגישות התרעות</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <div className="profile-options">
               {Object.values(ATTENTION_PROFILES).map((prof) => (
                 <label
                   key={prof.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.8rem',
-                    padding: '0.75rem 1rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border:
-                      formData.preferred_profile === prof.id
-                        ? '1px solid var(--accent-primary)'
-                        : '1px solid var(--border-subtle)',
-                    background:
-                      formData.preferred_profile === prof.id
-                        ? '#f1eaff'
-                        : '#ffffff',
-                    cursor: 'pointer',
-                    transition: 'var(--transition-smooth)',
-                  }}
+                  className={`profile-option ${formData.preferred_profile === prof.id ? 'selected' : ''}`}
                 >
                   <input
                     type="radio"
@@ -189,13 +132,13 @@ export const Register = () => {
                     value={prof.id}
                     checked={formData.preferred_profile === prof.id}
                     onChange={handleChange}
-                    style={{ accentColor: 'var(--accent-primary)' }}
+                    className="profile-radio"
                   />
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div className="profile-option-name">
                       {prof.name}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <div className="profile-option-description">
                       {prof.description}
                     </div>
                   </div>
@@ -206,32 +149,18 @@ export const Register = () => {
 
           <button
             type="submit"
-            className="btn-primary"
             disabled={loading}
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              marginTop: '1.25rem',
-              padding: '0.85rem',
-              background: 'var(--accent-gradient)',
-            }}
+            className="btn-primary auth-submit register-submit"
           >
             <span>{loading ? 'יוצר פרופיל נהג...' : 'סיום והרשמה'}</span>
             <CheckCircle2 size={18} />
           </button>
         </form>
 
-        <div
-          style={{
-            marginTop: '1.75rem',
-            textAlign: 'center',
-            borderTop: '1px solid var(--border-subtle)',
-            paddingTop: '1.25rem',
-          }}
-        >
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+        <div className="auth-footer register-footer">
+          <p>
             כבר יש לך פרופיל?{' '}
-            <Link to="/login" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
+            <Link to="/login">
               התחברות כאן
             </Link>
           </p>

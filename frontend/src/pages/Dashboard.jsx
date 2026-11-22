@@ -97,71 +97,43 @@ export const Dashboard = () => {
   const categories = ['הכל', 'Highway', 'Desert Cruise', 'Urban Traffic', 'Mountain Pass', 'Night Drive'];
 
   return (
-    <div className="page-shell dashboard-page" style={{ maxWidth: '1360px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <div className="page-shell dashboard-page">
       {/* Hero / HUD Banner */}
       <div
         className="glass-panel dashboard-hero"
-        style={{
-          padding: '2.5rem',
-          marginBottom: '2.5rem',
-          position: 'relative',
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg, #ffffff 0%, #f5efff 100%)',
-          border: '1px solid var(--border-subtle)',
-        }}
       >
-        <div style={{ maxWidth: '750px' }}>
+        <div className="dashboard-hero-content">
           <div
-            className="badge"
-            style={{
-              background: '#f1eaff',
-              color: 'var(--accent-primary)',
-              border: '1px solid #dfd0fa',
-              marginBottom: '0.8rem',
-            }}
+            className="badge dashboard-hero-badge"
           >
             <ShieldCheck size={14} />
             <span>DriveAlert • מערכת בטיחות וניטור נהג בזמן אמת</span>
           </div>
-          <h1 style={{ fontSize: '2.3rem', fontWeight: 900, lineHeight: 1.2, marginBottom: '0.8rem' }}>
-            שלום, <span style={{ color: 'var(--accent-primary)' }}>{user?.full_name || user?.username}</span>
+          <h1 className="dashboard-hero-title">
+            שלום, <span>{user?.full_name || user?.username}</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginBottom: '1.5rem' }}>
+          <p className="dashboard-hero-description">
             בחר/י מסלול נהיגה והפעל/י סשן מנוטר. המצלמה ומודל MediaPipe מעריכים עצימת עיניים כדי לחשב מדד ערנות מקורב; המדד אינו מודד ריכוז ישירות ואינו תחליף למערכת בטיחות מוסמכת.
           </p>
 
           {/* Quick Telemetry KPI Badges */}
           {stats && (
-            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-              <div
-                style={{
-                  background: '#ffffff',
-                  padding: '0.7rem 1.25rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>נסיעות שהושלמו</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-secondary)' }}>
+            <div className="dashboard-kpis">
+              <div className="dashboard-kpi">
+                <div className="dashboard-kpi-label">נסיעות שהושלמו</div>
+                <div className="dashboard-kpi-value completed">
                   {stats.completed_sessions} / {stats.total_sessions}
                 </div>
               </div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  padding: '0.7rem 1.25rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>ציון ערנות ממוצע</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)' }}>
+              <div className="dashboard-kpi">
+                <div className="dashboard-kpi-label">ציון ערנות ממוצע</div>
+                <div className="dashboard-kpi-value success">
                   {Number.isFinite(stats.overall_avg_score)
                     ? `${Math.round((stats.overall_avg_score > 1 ? stats.overall_avg_score / 100 : stats.overall_avg_score) * 100)}%`
                     : '—'}
                 </div>
                 {!Number.isFinite(stats.overall_avg_score) && (
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>יופיע לאחר איסוף דגימות תקינות</div>
+                  <div className="dashboard-kpi-caption">יופיע לאחר איסוף דגימות תקינות</div>
                 )}
               </div>
             </div>
@@ -171,42 +143,19 @@ export const Dashboard = () => {
 
       {/* Control Bar: Profiles & Filters */}
       <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem',
-          marginBottom: '2rem',
-        }}
+        className="dashboard-controls"
       >
         {/* Profile Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+        <div className="profile-controls">
+          <span className="profile-controls-label">
             רגישות התרעות:
           </span>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="profile-buttons">
             {Object.values(ATTENTION_PROFILES).map((prof) => (
               <button
                 key={prof.id}
                 onClick={() => setSelectedProfile(prof.id)}
-                style={{
-                  padding: '0.45rem 0.9rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  border:
-                    selectedProfile === prof.id
-                      ? '1px solid var(--accent-primary)'
-                      : '1px solid var(--border-subtle)',
-                  background:
-                    selectedProfile === prof.id
-                      ? '#f1eaff'
-                      : '#ffffff',
-                  color: selectedProfile === prof.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                  transition: 'var(--transition-smooth)',
-                }}
+                className={`profile-button ${selectedProfile === prof.id ? 'selected' : ''}`}
               >
                 {prof.name.split(' ')[0]} (סף {prof.threshold}%)
               </button>
@@ -215,7 +164,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Category Filters */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="category-filters">
           <Filter size={16} color="var(--text-muted)" />
           {categories.map((cat) => {
             const val = cat === 'הכל' ? '' : cat;
@@ -224,12 +173,7 @@ export const Dashboard = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(val)}
-                className={isSel ? 'btn-primary' : 'btn-secondary'}
-                style={{
-                  padding: '0.4rem 0.85rem',
-                  fontSize: '0.8rem',
-                  background: isSel ? 'var(--accent-gradient)' : undefined,
-                }}
+                className={`${isSel ? 'btn-primary' : 'btn-secondary'} category-filter`}
               >
                 {cat}
               </button>
@@ -238,7 +182,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+      <div className="dashboard-create-action">
         <button
           type="button"
           onClick={() => {
@@ -255,21 +199,20 @@ export const Dashboard = () => {
       {showCreateForm && (
         <form
           onSubmit={handleCreateRoute}
-          className="glass-panel"
-          style={{ padding: '1.5rem', marginBottom: '1.5rem', direction: 'rtl' }}
+          className="glass-panel route-create-form"
         >
-          <div style={{ marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+          <div className="route-create-heading">
+            <h2>
               יצירת מסלול נסיעה
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+            <p>
               צריך רק לתת למסלול שם. פרטים נוספים אפשר להוסיף לפי הצורך.
             </p>
           </div>
           {formError && (
-            <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{formError}</p>
+            <p role="alert" className="dashboard-action-error">{formError}</p>
           )}
-          <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+          <div className="form-group route-title-group">
             <label className="form-label" htmlFor="route-title">שם המסלול</label>
             <input
               id="route-title"
@@ -282,12 +225,12 @@ export const Dashboard = () => {
               onChange={(event) => setRouteForm({ ...routeForm, title: event.target.value })}
             />
           </div>
-          <details style={{ marginBottom: '1rem' }}>
-            <summary style={{ cursor: 'pointer', color: 'var(--accent-primary)', fontWeight: 700 }}>
+          <details className="route-details">
+            <summary>
               פרטים נוספים (לא חובה)
             </summary>
-            <div style={{ paddingTop: '0.75rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 1rem' }}>
+            <div className="route-details-content">
+              <div className="route-form-grid">
                 <div className="form-group">
                   <label className="form-label" htmlFor="route-category">סוג מסלול</label>
                   <select
@@ -326,7 +269,7 @@ export const Dashboard = () => {
                   />
                 </div>
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group route-description-group">
                 <label className="form-label" htmlFor="route-description">תיאור</label>
                 <textarea
                   id="route-description"
@@ -348,127 +291,80 @@ export const Dashboard = () => {
       )}
 
       {actionError && (
-        <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{actionError}</p>
+        <p role="alert" className="dashboard-action-error">{actionError}</p>
       )}
       {loadError && (
-        <p role="alert" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{loadError}</p>
+        <p role="alert" className="dashboard-action-error">{loadError}</p>
       )}
 
       {/* Routes Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>
+        <div className="dashboard-loading">
           טוען מסלולי נהיגה זמינים...
         </div>
       ) : routesList.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>הספרייה שלך עדיין ריקה. הוסיפו יעד נסיעה כדי להתחיל.</p>
+        <div className="glass-panel dashboard-empty">
+          <p>הספרייה שלך עדיין ריקה. הוסיפו יעד נסיעה כדי להתחיל.</p>
         </div>
       ) : (
         <div
           className="route-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-            gap: '1.75rem',
-          }}
         >
           {routesList.map((item) => (
             <div
               key={item.id}
-              className="glass-panel"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                borderRadius: 'var(--radius-md)',
-              }}
+              className="glass-panel route-card"
             >
               {/* Thumbnail / Header */}
-              <div className="route-thumbnail" style={{ position: 'relative', height: '200px', background: '#0b1120' }}>
+              <div className="route-thumbnail">
                 <img
                   src={
                     item.thumbnail_url ||
                     'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=600&q=80'
                   }
                   alt={item.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  className="route-thumbnail-image"
                 />
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    display: 'flex',
-                    gap: '0.5rem',
-                  }}
-                >
+                <div className="route-badges">
                   <span className="badge badge-primary">{item.category}</span>
                   <span className="badge badge-warning">{item.difficulty}</span>
                 </div>
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    left: '12px',
-                    background: 'rgba(0,0,0,0.75)',
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                  }}
-                >
+                <div className="route-live-label">
                   <Clock size={13} />
                   <span>נסיעה בזמן אמת</span>
                 </div>
               </div>
 
               {/* Body */}
-              <div style={{ padding: '1.4rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.6rem' }}>
+              <div className="route-card-body">
+                <h3 className="route-card-title">
                   {item.title}
                 </h3>
                 {item.is_default ? (
-                  <span style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 700 }}>
+                  <span className="route-default-label">
                     מסלול מוכן לכולם
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => handleDeleteRoute(item)}
-                    className="btn-secondary"
-                    style={{ alignSelf: 'flex-start', marginBottom: '0.75rem', padding: '0.35rem 0.7rem', fontSize: '0.8rem' }}
+                    className="btn-secondary route-delete-button"
                     aria-label={`מחיקת ${item.title}`}
                   >
                     <Trash2 size={15} />
                     <span>מחיקה מהספרייה</span>
                   </button>
                 )}
-                <p
-                  style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '0.88rem',
-                    lineHeight: '1.55',
-                    marginBottom: '1.25rem',
-                    flex: 1,
-                  }}
-                >
+                <p className="route-card-description">
                   {item.description}
                 </p>
 
                 {/* Tags */}
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                <div className="route-tags">
                   {item.tags?.map((t) => (
                     <span
                       key={t}
-                      style={{
-                        fontSize: '0.75rem',
-                        color: 'var(--text-muted)',
-                        background: '#f7f3ff',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: 'var(--radius-sm)',
-                      }}
+                      className="route-tag"
                     >
                       #{t}
                     </span>
@@ -478,12 +374,7 @@ export const Dashboard = () => {
                 {/* Action Button */}
                 <button
                   onClick={() => handleStartDrive(item.id)}
-                  className="btn-primary"
-                  style={{
-                    width: '100%',
-                    justifyContent: 'center',
-                    background: 'var(--accent-gradient)',
-                  }}
+                  className="btn-primary route-start-button"
                 >
                   <Car size={18} />
                   <span>התחלת נסיעה מנוטרת</span>

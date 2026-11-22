@@ -1,0 +1,59 @@
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.15rem;
+  text-align: right;
+}
+
+.form-label {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  color: var(--text-primary);
+  background: #fff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.94rem;
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.form-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(87, 70, 232, 0.12);
+}
+
+.form-input::placeholder {
+  color: #9aa5b5;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge-success { color: #087958; background: #e9f8f2; border: 1px solid #c8ecde; }
+.badge-warning { color: #98600b; background: #fff7e8; border: 1px solid #f0dfbb; }
+.badge-danger { color: #b5293e; background: #fff0f2; border: 1px solid #f4ccd2; }
+.badge-primary { color: #5140d0; background: #f0efff; border: 1px solid #dddbff; }
+

@@ -39,54 +39,27 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
 
   return (
     <div
-      className="glass-panel"
-      style={{
-        padding: '1.4rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        border: hasScore && normalized < threshold ? '1px solid rgba(239, 68, 68, 0.6)' : undefined,
-        boxShadow: hasScore && normalized < threshold ? '0 0 25px rgba(239, 68, 68, 0.35)' : undefined,
-      }}
+      className={`glass-panel gauge-meter ${hasScore && normalized < threshold ? 'gauge-alert' : ''}`}
     >
       {/* Header */}
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '0.8rem',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '0.85rem',
-            fontWeight: 700,
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-          }}
-        >
+      <div className="gauge-header">
+        <span className="gauge-label">
           <Activity size={16} color={statusColor} />
           {label}
         </span>
-        <span className={`badge ${statusClass}`} style={{ fontSize: '0.7rem' }}>
+        <span className={`badge gauge-status-badge ${statusClass}`}>
           <IconComponent size={12} />
           {statusText}
         </span>
       </div>
 
       {/* SVG Arc Gauge */}
-      <div style={{ position: 'relative', width: '200px', height: '115px' }}>
+      <div className="gauge-graphic">
         <svg
           width="200"
           height="120"
           viewBox="0 0 200 120"
-          style={{ overflow: 'visible' }}
+          className="gauge-svg"
         >
           {/* Background Track Arc */}
           <path
@@ -115,57 +88,26 @@ export const GaugeMeter = ({ score = null, threshold = 0.4, label = 'מד ערנ
             strokeDasharray={circumference}
             strokeDashoffset={hasScore ? strokeDashoffset : circumference}
             strokeLinecap="round"
-            style={{
-              transition: 'stroke-dashoffset 0.4s ease, stroke 0.4s ease',
-              filter: `drop-shadow(0 0 8px ${statusColor})`,
-            }}
+            className="gauge-progress"
+            style={{ '--gauge-glow': statusColor }}
           />
         </svg>
 
         {/* Digital Readout in center of gauge */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '2px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '2rem',
-              fontWeight: 900,
-              fontFamily: 'var(--font-mono, monospace)',
-              lineHeight: 1,
-              color: statusColor,
-              textShadow: `0 0 15px ${statusColor}`,
-            }}
-          >
+        <div className="gauge-readout">
+          <div className="gauge-value" style={{ '--gauge-color': statusColor }}>
             {hasScore ? normalized.toFixed(2) : '—'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+          <div className="gauge-caption">
             {hasScore ? `${percentage}% ערנות` : 'ממתין למדידה'}
           </div>
         </div>
       </div>
 
       {/* Threshold Reference Indicator */}
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '0.8rem',
-          padding: '0.4rem 0.6rem',
-          background: '#f7f3ff',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.75rem',
-        }}
-      >
-        <span style={{ color: 'var(--text-muted)' }}>0.00 (ישנוני)</span>
-        <span style={{ color: 'var(--danger)', fontWeight: 600 }}>
+      <div className="gauge-threshold">
+        <span>0.00 (ישנוני)</span>
+        <span className="gauge-danger-threshold">
           סף סכנה: {threshold.toFixed(2)}
         </span>
         <span style={{ color: 'var(--text-muted)' }}>1.00 (שיא)</span>
